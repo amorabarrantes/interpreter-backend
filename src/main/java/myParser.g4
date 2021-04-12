@@ -5,7 +5,16 @@ options {
 }
 
 program:(statement)* EOF;
-statement:variableDecl PYCOMA|classDeclaration PYCOMA|assignment PYCOMA|arrayAssignment PYCOMA|printStatement PYCOMA|ifStatement|whileStatement|returnStatement PYCOMA|functionDecl|block;
+statement:          variableDecl PYCOMA
+                    |classDeclaration PYCOMA
+                    |assignment PYCOMA
+                    |arrayAssignment PYCOMA
+                    |printStatement PYCOMA
+                    |ifStatement
+                    |whileStatement
+                    |returnStatement PYCOMA
+                    |functionDecl
+                    |block;
 
 block:BRACKETLEFT (statement)* BRACKETRIGHT;
 functionDecl:type IDENTIFIER PLEFT (formalParams)? PRIGHT block;
@@ -23,12 +32,27 @@ simpleType: BOOLEAN|CHAR|INT|STRING;
 arrayType: simpleType SQUAREPLEFT SQUAREPRIGHT;
 assignment: IDENTIFIER (DOT IDENTIFIER)? ASSIGN expression;
 arrayAssignment: IDENTIFIER SQUAREPLEFT expression SQUAREPRIGHT ASSIGN expression;
-expression: simpleExpression (RELATIONALOP simpleExpression)*;
-simpleExpression: term (ADDITIVEOP term)*;
-term: factor (MULTIPLICATIVEOP factor)*;
-factor:LITERAL|IDENTIFIER (DOT IDENTIFIER)?|functionCall|arrayLookup|arrayLength|subExpression|arrayAllocationExpression|allocationExpression|unary;
+expression: simpleExpression (relationalOp simpleExpression)*;
+simpleExpression: term (additiveOp term)*;
+term: factor (multiplicativeOP factor)*;
+factor:         literal
+                |IDENTIFIER (DOT IDENTIFIER)?
+                |functionCall
+                |arrayLookup
+                |arrayLength
+                |subExpression
+                |arrayAllocationExpression
+                |allocationExpression
+                |unary;
 
-unary: (PLUS|MINUS|EXCLAMATION) (expression)*;
+relationalOp:ORSYMBOL|AMPERTON|SMALLER|GREATHER|EQUALS|DIFFERENT|SMALLEREQUAL|GREATHEREQUAL;
+additiveOp:MAS|MINUS|OR;
+multiplicativeOP:MUL|DIV|AND;
+
+unary: (MAS|MINUS|EXCLAMATION) (expression)*;
+
+literal:INTLITERAL|REALLITERAL|BOOLLITERAL|STRINGLITERAL;
+
 
 allocationExpression: NEW IDENTIFIER PLEFT PRIGHT;
 arrayAllocationExpression: NEW simpleType SQUAREPLEFT expression SQUAREPRIGHT;

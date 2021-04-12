@@ -38,6 +38,48 @@ public class metodos {
         }
     }
 
+/*
+MAIN PRUEBAS
+    public static void main(String[] args) {
+        myScanner inst = null;
+        myParser parser = null;
+        ParseTree tree = null;
+        CharStream input = null;
+        CommonTokenStream tokens = null;
+
+        input = CharStreams.fromString("print(1-1);");
+        inst = new myScanner(input);
+        inst.addErrorListener(ErrorCatcher.INSTANCE);
+        tokens = new CommonTokenStream(inst);
+        parser = new myParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(ErrorCatcher.INSTANCE);
+        tree = parser.program();
+        if (ErrorCatcher.INSTANCE.stringErrores == "") {
+            System.out.println("Compilación Exitosa sin errores");
+        } else {
+            String mensaje = ErrorCatcher.INSTANCE.stringErrores;
+            ErrorCatcher.INSTANCE.stringErrores = "";
+            System.out.println(mensaje);
+        }
+    }
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /*
     public static void main(String[] args) {
 

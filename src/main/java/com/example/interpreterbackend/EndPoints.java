@@ -2,7 +2,7 @@ package com.example.interpreterbackend;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 
 
 public class EndPoints {
@@ -13,9 +13,8 @@ public class EndPoints {
     }
 
     @GetMapping("/compile")
-    @CrossOrigin(origins = "http://localhost:3000")
+
     public String prueba(@RequestParam(value = "stringCodeValue") String stringCodeValue){
-        System.out.println(stringCodeValue + "hola");
         String mensaje = metodos.compilarCodigo(stringCodeValue);
         return mensaje;
     }
