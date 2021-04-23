@@ -38,8 +38,8 @@ public class metodos {
         }
     }
 
-/*
-MAIN PRUEBAS
+
+
     public static void main(String[] args) {
         myScanner inst = null;
         myParser parser = null;
@@ -47,7 +47,12 @@ MAIN PRUEBAS
         CharStream input = null;
         CommonTokenStream tokens = null;
 
-        input = CharStreams.fromString("print(1-1);");
+        input = CharStreams.fromString("int ComputeFac(int num) {\n" +
+                "    int num_aux;\n" +
+                "    if (num < 1){\n" +
+                "        num_aux = 1;}\n" +
+                "    return num_aux;\n" +
+                "}\n");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);
@@ -55,6 +60,10 @@ MAIN PRUEBAS
         parser.removeErrorListeners();
         parser.addErrorListener(ErrorCatcher.INSTANCE);
         tree = parser.program();
+
+        PrettyPrint pp = new PrettyPrint();
+
+        pp.visit(tree);
         if (ErrorCatcher.INSTANCE.stringErrores == "") {
             System.out.println("Compilación Exitosa sin errores");
         } else {
@@ -64,7 +73,7 @@ MAIN PRUEBAS
         }
     }
 
-*/
+
 
 
 
