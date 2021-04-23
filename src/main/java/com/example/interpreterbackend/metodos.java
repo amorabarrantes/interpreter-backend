@@ -47,12 +47,7 @@ public class metodos {
         CharStream input = null;
         CommonTokenStream tokens = null;
 
-        input = CharStreams.fromString("int ComputeFac(int num) {\n" +
-                "    int num_aux;\n" +
-                "    if (num < 1){\n" +
-                "        num_aux = 1;}\n" +
-                "    return num_aux;\n" +
-                "}\n");
+        input = CharStreams.fromString("int x = y*-z;");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);
