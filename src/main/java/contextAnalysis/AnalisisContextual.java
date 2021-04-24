@@ -2,14 +2,25 @@ package contextAnalysis;
 
 import generated.myParser;
 import generated.myParserBaseVisitor;
+import org.antlr.runtime.CommonToken;
+
+import java.util.LinkedList;
 
 
-public class AnalisisContextual<Object> extends myParserBaseVisitor <Object>{
+public class AnalisisContextual extends myParserBaseVisitor <Object>{
+    private identificationTable tabla = new identificationTable(new LinkedList<>(),0);
+
+
     @Override
     public Object visitProgramAST(myParser.ProgramASTContext ctx) {
-        for (myParser.StatementContext statement: ctx.statement())
-            this.visit(statement);
-        return null;
+        try {
+            for (myParser.StatementContext statement: ctx.statement())
+                this.visit(statement);
+            return null;
+        }catch (RuntimeException e){
+            System.out.println(e);
+            return null;
+        }
     }
 
     @Override
@@ -139,61 +150,73 @@ public class AnalisisContextual<Object> extends myParserBaseVisitor <Object>{
 
     @Override
     public Object visitClassVarDecAST(myParser.ClassVarDecASTContext ctx) {
-        this.visit(ctx.simpleType());
-        if(ctx.expression() != null)
+        String type = (String) this.visit(ctx.simpleType());
+
+        if(ctx.expression() != null)    //En este if hay que comprobar que la asignacion sea compatible con el tipo.
             this.visit(ctx.expression());
-        return null;
+
+        return type;
     }
 
     @Override
     public Object visitVarDecAST(myParser.VarDecASTContext ctx) {
-        this.visit(ctx.type());
+        String type = (String) this.visit(ctx.type());
+        if (tabla.retrieve(ctx.IDENTIFIER().getText()) == null){
+            tabla.enter(ctx.IDENTIFIER().getSymbol(),type, tabla.nivel, ctx);
+        }else
+            throw new RuntimeException(ctx.IDENTIFIER().getText() +": es una variable ya existente");
         if(ctx.expression() != null)
             this.visit(ctx.expression());
+        tabla.imprimir();
         return null;
     }
 
     @Override
     public Object visitSimpleTypeTPAST(myParser.SimpleTypeTPASTContext ctx) {
-        this.visit(ctx.simpleType());
-        return null;
+        String varType = (String) this.visit(ctx.simpleType());
+        return varType;
     }
 
     @Override
     public Object visitArrayTypeTPAST(myParser.ArrayTypeTPASTContext ctx) {
-        this.visit(ctx.arrayType());
-        return null;
+        String arrayType = (String) this.visit(ctx.arrayType());
+        return arrayType;
     }
 
     @Override
     public Object visitIdTPAST(myParser.IdTPASTContext ctx) {
-        return null;
+        String idType = ctx.IDENTIFIER().getText();
+        if (tabla.retrieve(ctx.IDENTIFIER().getText()) != null)
+            return  idType;
+        else
+            throw new RuntimeException(ctx.IDENTIFIER().getText()+": como tipo de dato no existe");
     }
 
     @Override
     public Object visitBooleanSimpleTAST(myParser.BooleanSimpleTASTContext ctx) {
-        return null;
+        return "boolean";
     }
 
     @Override
     public Object visitCharSimpleTAST(myParser.CharSimpleTASTContext ctx) {
-        return null;
+        return "char";
     }
 
     @Override
     public Object visitIntSimpleTAST(myParser.IntSimpleTASTContext ctx) {
-        return null;
+        return "int";
     }
 
     @Override
     public Object visitStringSimpleTAST(myParser.StringSimpleTASTContext ctx) {
-        return null;
+        return "string";
+
     }
 
     @Override
     public Object visitArrayTypeAST(myParser.ArrayTypeASTContext ctx) {
-        this.visit(ctx.simpleType());
-        return null;
+        String type = (String) this.visit(ctx.simpleType());
+        return type + "[]";
     }
 
     @Override

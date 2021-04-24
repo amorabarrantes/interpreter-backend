@@ -1,6 +1,6 @@
 package contextAnalysis;
 
-import org.antlr.runtime.Token;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.LinkedList;
@@ -17,8 +17,8 @@ public class identificationTable {
     /**
      * Agrega un identificador a la Tabla
      */
-    public void enter(Token tok, String type, int nivel, String atr, ParserRuleContext declCtx) {
-        nodo NuevoNodo = new nodo(tok,type,nivel,atr,declCtx);
+    public void enter(Token tok, String type, int nivel, ParserRuleContext declCtx) {
+        nodo NuevoNodo = new nodo(tok,type,nivel,declCtx);
         ll.addLast(NuevoNodo);
     }
 
@@ -30,8 +30,10 @@ public class identificationTable {
         int x = ll.size()-1;
         for (int i=x;i>=0;i--){
             nodo Nodo = ll.get(i);
-            if(Nodo.tok.getText().equals(nombre))
-                return Nodo.Atr;
+            if(Nodo.tok.getText().equals(nombre) && nivel == Nodo.nivel){
+                System.out.println(Nodo.tok.getText());
+                return Nodo.tok.getText();
+            }
         }
         return null;
     }

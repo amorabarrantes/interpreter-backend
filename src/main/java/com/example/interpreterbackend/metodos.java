@@ -1,5 +1,6 @@
 package com.example.interpreterbackend;
 
+import contextAnalysis.AnalisisContextual;
 import generated.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
@@ -47,7 +48,7 @@ public class metodos {
         CharStream input = null;
         CommonTokenStream tokens = null;
 
-        input = CharStreams.fromString("int x = y*-z;");
+        input = CharStreams.fromString("int x = 5; int q = hola; int q = 3;");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);
@@ -56,9 +57,9 @@ public class metodos {
         parser.addErrorListener(ErrorCatcher.INSTANCE);
         tree = parser.program();
 
-        PrettyPrint pp = new PrettyPrint();
+        AnalisisContextual ac = new AnalisisContextual();
 
-        pp.visit(tree);
+        ac.visit(tree);
         if (ErrorCatcher.INSTANCE.stringErrores == "") {
             System.out.println("Compilación Exitosa sin errores");
         } else {
