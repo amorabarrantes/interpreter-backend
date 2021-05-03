@@ -48,7 +48,12 @@ public class metodos {
         CharStream input = null;
         CommonTokenStream tokens = null;
 
-        input = CharStreams.fromString("int x = 5; int q = hola; int q = 3;");
+
+        //Este codigo es para probar las vardeclarations: int x = 5; int q = hola; int q = 3;
+        //Este codigo es para probar las classDeclarations: class peruano {int x};
+        //Este codigo es para probar las funcionDeclarations: int funcioncita () {} || funcionxd funcioncita () {}
+
+        input = CharStreams.fromString("class peruano {int x}; int metodoNuevo (peruano x) {}");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);
@@ -60,6 +65,7 @@ public class metodos {
         AnalisisContextual ac = new AnalisisContextual();
 
         ac.visit(tree);
+
         if (ErrorCatcher.INSTANCE.stringErrores == "") {
             System.out.println("Compilación Exitosa sin errores");
         } else {

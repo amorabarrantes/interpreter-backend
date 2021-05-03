@@ -1,25 +1,22 @@
 package contextAnalysis;
 
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.ParserRuleContext;
-
 import java.util.LinkedList;
 
-public class identificationTable {
+public class identificationTable<T extends nodo> {
 
-    public LinkedList<nodo> ll;
+    public LinkedList<T> ll;
     public int nivel;
 
-    public identificationTable(LinkedList<nodo> ll, int nivel) {
+    public identificationTable(LinkedList<T> ll, int nivel) {
         this.ll = ll;
         this.nivel = nivel;
     }
+
     /**
      * Agrega un identificador a la Tabla
      */
-    public void enter(Token tok, String type, int nivel, ParserRuleContext declCtx) {
-        nodo NuevoNodo = new nodo(tok,type,nivel,declCtx);
-        ll.addLast(NuevoNodo);
+    public void enter(T nodo) {
+        ll.addLast(nodo);
     }
 
     /**
@@ -27,16 +24,30 @@ public class identificationTable {
      * cuando el identificador no se encuentra en la tabla
      */
     public String retrieve(String nombre) {
-        int x = ll.size()-1;
-        for (int i=x;i>=0;i--){
-            nodo Nodo = ll.get(i);
-            if(Nodo.tok.getText().equals(nombre) && nivel == Nodo.nivel){
-                System.out.println(Nodo.tok.getText());
-                return Nodo.tok.getText();
+        T nodoBuscado = buscarNodo(nombre);
+        if (nodoBuscado != null) {
+            return (nodoBuscado.tok.getText());
+        }
+        return null;
+    }
+
+    public T retrieveNode(String nombre) {
+        T nodoBuscado = buscarNodo(nombre);
+        if (nodoBuscado != null) {
+            return (nodoBuscado);
+        }
+        return null;
+    }
+
+    public T buscarNodo(String nombre) {
+        for (T obj : ll) {
+            if (obj.tok.getText().equals(nombre) && obj.nivel == nivel) {
+                return (obj);
             }
         }
         return null;
     }
+
 
     /**
      * Agrega un nuevo nivel de identificadores a la tabla
@@ -51,22 +62,45 @@ public class identificationTable {
      * Se borran todos los campos de la tabla asociados con el nivel
      */
     public void closeScope() {
-        int x = ll.size()-1;
-        for (int i=x;i>=0;i--){
+        int x = ll.size() - 1;
+        for (int i = x; i >= 0; i--) {
             nodo Nodo = ll.get(i);
-            if(Nodo.nivel == nivel)
+            if (Nodo.nivel == nivel)
                 ll.remove(i);
         }
-        nivel --;
+        nivel--;
     }
 
 
-    public void imprimir() {
-        System.out.println("----- INICIO TABLA ------");
-        for (int i = 0; i < ll.size(); i++) {
-            Token s = ll.get(i).tok;
-            System.out.println("Nombre: " + s.getText() + " - " + ll.get(i).nivel + " - " + ll.get(i).type);
+    public void imprimirNodoVariable() {
+        System.out.println("----- INICIO TABLA VARIABLES ------");
+        for (T obj : ll) {
+            System.out.println("Nombre: " + obj.tok.getText() + " - " + obj.nivel + " - " + ((nodoVariable) obj).type);
         }
-        System.out.println("----- FIN TABLA ------");
+        System.out.println("----- FIN TABLA VARIABLES------");
+    }
+
+    public void imprimirNodoClase() {
+        System.out.println("----- INICIO TABLA CLASES------");
+        for (T obj : ll) {
+            System.out.println("\nNombre: " + obj.tok.getText() + " - Nivel: " + obj.nivel);
+            System.out.println("Atributos:");
+            for (nodoVariable obj2 : ((nodoClase) obj).atributos) {
+                System.out.println("\tNombre: " + obj2.tok.getText() + " - Nivel: " + obj2.nivel + " - " + obj2.type);
+            }
+        }
+        System.out.println("\n----- FIN TABLA CLASES------");
+    }
+
+    public void imprimirNodoFuncion() {
+        System.out.println("----- INICIO TABLA FUNCIONES------");
+        for (T obj : ll) {
+            System.out.println("\nNombre: " + obj.tok.getText() + " - Nivel: " + obj.nivel + " - Tipo: " + ((nodoFuncion) obj).type);
+            System.out.println("Parametros:");
+            for (nodoVariable obj2 : ((nodoFuncion) obj).parametros) {
+                System.out.println("\tNombre: " + obj2.tok.getText() + " - Nivel: " + obj2.nivel + " - Tipo: " + obj2.type);
+            }
+        }
+        System.out.println("\n----- FIN TABLA FUNCIONES------");
     }
 }

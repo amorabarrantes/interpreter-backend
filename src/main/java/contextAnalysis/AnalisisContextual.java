@@ -2,22 +2,25 @@ package contextAnalysis;
 
 import generated.myParser;
 import generated.myParserBaseVisitor;
-import org.antlr.runtime.CommonToken;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 
-public class AnalisisContextual extends myParserBaseVisitor <Object>{
-    private identificationTable tabla = new identificationTable(new LinkedList<>(),0);
+public class AnalisisContextual extends myParserBaseVisitor<Object> {
+
+    private final identificationTable<nodoVariable> tablaVarDeclaration = new identificationTable<>(new LinkedList<>(), 0);
+    private final identificationTable<nodoClase> tablaClassDeclaration = new identificationTable<>(new LinkedList<>(), 0);
+    private final identificationTable<nodoFuncion> tablaFunciones = new identificationTable<>(new LinkedList<>(), 0);
 
 
     @Override
     public Object visitProgramAST(myParser.ProgramASTContext ctx) {
         try {
-            for (myParser.StatementContext statement: ctx.statement())
+            for (myParser.StatementContext statement : ctx.statement())
                 this.visit(statement);
             return null;
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.out.println(e);
             return null;
         }
@@ -85,30 +88,50 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
 
     @Override
     public Object visitBlockAST(myParser.BlockASTContext ctx) {
-        for (myParser.StatementContext statement: ctx.statement())
+        for (myParser.StatementContext statement : ctx.statement())
             this.visit(statement);
         return null;
     }
 
     @Override
     public Object visitFunctionDecAST(myParser.FunctionDecASTContext ctx) {
-        this.visit(ctx.type());
-        if(ctx.formalParams() != null) 
+
+        String type = (String) this.visit(ctx.type());
+
+        //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 FUNCIONES CON EL MISMO IDENTIFICADOR.
+        if (tablaFunciones.retrieve(ctx.IDENTIFIER().getText()) == null) {
+            tablaFunciones.enter(new nodoFuncion(ctx.IDENTIFIER().getSymbol(), tablaFunciones.nivel, ctx, new ArrayList<nodoVariable>(), type));
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una funcion ya existente");
+        }
+
+        if (ctx.formalParams() != null)
             this.visit(ctx.formalParams());
         this.visit(ctx.block());
+
+        tablaFunciones.imprimirNodoFuncion();
+
         return null;
     }
 
     @Override
     public Object visitFormalParamsAST(myParser.FormalParamsASTContext ctx) {
-        for (myParser.FormalParamContext param: ctx.formalParam())
+
+        for (myParser.FormalParamContext param : ctx.formalParam()) {
             this.visit(param);
+        }
         return null;
     }
 
     @Override
     public Object visitFormalParamAST(myParser.FormalParamASTContext ctx) {
-        this.visit(ctx.type());
+
+        String type = (String) this.visit(ctx.type());
+
+        String nombreFuncion = ((myParser.FunctionDecASTContext) (ctx.parent.parent)).IDENTIFIER().getText();
+        nodoFuncion nodo = tablaFunciones.retrieveNode(nombreFuncion);
+        nodo.parametros.add(new nodoVariable(ctx.IDENTIFIER().getSymbol(), 0, ctx, type));
+
         return null;
     }
 
@@ -123,7 +146,7 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
     public Object visitIfAST(myParser.IfASTContext ctx) {
         this.visit(ctx.expression());
         this.visit(ctx.block(0));
-        if(ctx.block(1) != null) {
+        if (ctx.block(1) != null) {
             this.visit(ctx.block(1));
         }
         return null;
@@ -143,16 +166,44 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
 
     @Override
     public Object visitClassDecAST(myParser.ClassDecASTContext ctx) {
-        for(myParser.ClassVariableDeclContext classVar: ctx.classVariableDecl())
+
+        //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 CLASES CON EL MISMO IDENTIFICADOR.
+        if (tablaClassDeclaration.retrieve(ctx.IDENTIFIER().getText()) == null) {
+            tablaClassDeclaration.enter(new nodoClase(ctx.IDENTIFIER().getSymbol(), tablaClassDeclaration.nivel, ctx, new ArrayList<nodoVariable>()));
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una clase ya existente");
+        }
+
+        for (myParser.ClassVariableDeclContext classVar : ctx.classVariableDecl())
             this.visit(classVar);
+
+        tablaClassDeclaration.imprimirNodoClase();
         return null;
     }
 
     @Override
     public Object visitClassVarDecAST(myParser.ClassVarDecASTContext ctx) {
         String type = (String) this.visit(ctx.simpleType());
+        nodoClase clasePadre = tablaClassDeclaration.retrieveNode(((myParser.ClassDecASTContext) ctx.parent).IDENTIFIER().getText());
 
-        if(ctx.expression() != null)    //En este if hay que comprobar que la asignacion sea compatible con el tipo.
+        nodoVariable nodoNuevo = new nodoVariable(ctx.IDENTIFIER().getSymbol(), 0, ctx, type);
+
+        boolean existe = false;
+
+        for (nodoVariable obj : clasePadre.atributos) {
+            if (obj.declCtx.getText().equals(nodoNuevo.declCtx.getText())) {
+                existe = true;
+            }
+        }
+
+        if (!existe) {
+            clasePadre.atributos.add(nodoNuevo);
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es un atributo ya existente");
+        }
+
+
+        if (ctx.expression() != null)    //En este if hay que comprobar que la asignacion sea compatible con el tipo.
             this.visit(ctx.expression());
 
         return type;
@@ -161,15 +212,16 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
     @Override
     public Object visitVarDecAST(myParser.VarDecASTContext ctx) {
         String type = (String) this.visit(ctx.type());
-        if (tabla.retrieve(ctx.IDENTIFIER().getText()) == null){
-            tabla.enter(ctx.IDENTIFIER().getSymbol(),type, tabla.nivel, ctx);
-        }else
-            throw new RuntimeException(ctx.IDENTIFIER().getText() +": es una variable ya existente");
-        if(ctx.expression() != null)
+        if (tablaVarDeclaration.retrieve(ctx.IDENTIFIER().getText()) == null) {
+            tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel, ctx, type));
+        } else
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una variable ya existente");
+        if (ctx.expression() != null)
             this.visit(ctx.expression());
-        tabla.imprimir();
+        tablaVarDeclaration.imprimirNodoVariable();
         return null;
     }
+
 
     @Override
     public Object visitSimpleTypeTPAST(myParser.SimpleTypeTPASTContext ctx) {
@@ -186,10 +238,12 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
     @Override
     public Object visitIdTPAST(myParser.IdTPASTContext ctx) {
         String idType = ctx.IDENTIFIER().getText();
-        if (tabla.retrieve(ctx.IDENTIFIER().getText()) != null)
-            return  idType;
-        else
-            throw new RuntimeException(ctx.IDENTIFIER().getText()+": como tipo de dato no existe");
+
+        if (tablaClassDeclaration.retrieveNode(ctx.IDENTIFIER().getText()) != null) {
+            return idType;
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => como tipo de dato no existe");
+        }
     }
 
     @Override
@@ -236,7 +290,7 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
     public Object visitExpressionAST(myParser.ExpressionASTContext ctx) {
         this.visit(ctx.simpleExpression(0));
         for (int i = 1; i < ctx.simpleExpression().size(); i++) {
-            this.visit(ctx.relationalOp(i-1));
+            this.visit(ctx.relationalOp(i - 1));
             this.visit(ctx.simpleExpression(i));
         }
         return null;
@@ -246,7 +300,7 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
     public Object visitSimpleExpressionAST(myParser.SimpleExpressionASTContext ctx) {
         this.visit(ctx.term(0));
         for (int i = 1; i < ctx.additiveOp().size(); i++) {
-            this.visit(ctx.additiveOp(i-1));
+            this.visit(ctx.additiveOp(i - 1));
             this.visit(ctx.term(i));
         }
         return null;
@@ -257,7 +311,7 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
         this.visit(ctx.factor(0));
 
         for (int i = 1; i < ctx.factor().size(); i++) {
-            this.visit(ctx.multiplicativeOP(i-1));
+            this.visit(ctx.multiplicativeOP(i - 1));
             this.visit(ctx.factor(i));
         }
         return null;
@@ -388,7 +442,7 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
 
     @Override
     public Object visitUnaryAST(myParser.UnaryASTContext ctx) {
-        for (myParser.ExpressionContext expression: ctx.expression()){
+        for (myParser.ExpressionContext expression : ctx.expression()) {
             this.visit(expression);
         }
         return null;
@@ -434,14 +488,14 @@ public class AnalisisContextual extends myParserBaseVisitor <Object>{
 
     @Override
     public Object visitFunctionCallAST(myParser.FunctionCallASTContext ctx) {
-        if(ctx.actualParams() != null)
+        if (ctx.actualParams() != null)
             this.visit(ctx.actualParams());
         return null;
     }
 
     @Override
     public Object visitActualParamsAST(myParser.ActualParamsASTContext ctx) {
-        for (myParser.ExpressionContext expression: ctx.expression())
+        for (myParser.ExpressionContext expression : ctx.expression())
             this.visit(expression);
         return null;
     }

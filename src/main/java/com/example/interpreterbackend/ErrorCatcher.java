@@ -18,5 +18,6 @@ public class ErrorCatcher extends BaseErrorListener {
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e){
         stringErrores += msg + "\n";
     }
+
 }
 
