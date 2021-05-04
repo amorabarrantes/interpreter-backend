@@ -213,11 +213,17 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     public Object visitVarDecAST(myParser.VarDecASTContext ctx) {
         String type = (String) this.visit(ctx.type());
         if (tablaVarDeclaration.retrieve(ctx.IDENTIFIER().getText()) == null) {
+            if (ctx.expression() != null) {
+                String tipoExpression = (String) this.visit(ctx.expression());
+                if (!type.equals(tipoExpression)) {
+                    throw new RuntimeException(ctx.IDENTIFIER().getText() + " espera => " + type + " pero recibió => " + tipoExpression);
+                }
+            }
             tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel, ctx, type));
         } else
             throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una variable ya existente");
-        if (ctx.expression() != null)
-            this.visit(ctx.expression());
+
+
         tablaVarDeclaration.imprimirNodoVariable();
         return null;
     }
@@ -264,7 +270,6 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitStringSimpleTAST(myParser.StringSimpleTASTContext ctx) {
         return "string";
-
     }
 
     @Override
@@ -288,48 +293,76 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitExpressionAST(myParser.ExpressionASTContext ctx) {
-        this.visit(ctx.simpleExpression(0));
+
+        String tipoSimpleExpression = (String) this.visit(ctx.simpleExpression(0));
+
         for (int i = 1; i < ctx.simpleExpression().size(); i++) {
             this.visit(ctx.relationalOp(i - 1));
             this.visit(ctx.simpleExpression(i));
         }
-        return null;
+        return tipoSimpleExpression;
     }
 
     @Override
     public Object visitSimpleExpressionAST(myParser.SimpleExpressionASTContext ctx) {
-        this.visit(ctx.term(0));
+
+
+        String tipoTermino = (String) this.visit(ctx.term(0));
+
+
         for (int i = 1; i < ctx.additiveOp().size(); i++) {
             this.visit(ctx.additiveOp(i - 1));
             this.visit(ctx.term(i));
         }
-        return null;
+        return tipoTermino;
     }
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
-        this.visit(ctx.factor(0));
+
+        String tipoFactor = (String) this.visit(ctx.factor(0));
 
         for (int i = 1; i < ctx.factor().size(); i++) {
             this.visit(ctx.multiplicativeOP(i - 1));
             this.visit(ctx.factor(i));
         }
-        return null;
+        return tipoFactor;
     }
 
     @Override
     public Object visitLiteralFAST(myParser.LiteralFASTContext ctx) {
-        this.visit(ctx.literal());
-        return null;
+        String tipoLiteral = (String) this.visit(ctx.literal());
+        return tipoLiteral;
     }
 
     @Override
     public Object visitIdFAST(myParser.IdFASTContext ctx) {
-        return null;
+        //Asignacion de una variable ya declarada.
+        if (ctx.IDENTIFIER().size() == 1) {
+            nodoVariable nodo = tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().get(0).getText());
+            if (nodo != null) {
+                return nodo.type;
+            } else {
+                throw new RuntimeException(ctx.IDENTIFIER().get(0).getText() + " no es una variable existente");
+            }
+        } else { //Asignacion de una variable de clase
+            nodoClase clase = tablaClassDeclaration.retrieveNode(ctx.IDENTIFIER().get(0).getText());
+            if (clase != null) {
+                nodoVariable variableClase = clase.buscarVariableClase(ctx.IDENTIFIER().get(1).getText());
+                if (variableClase != null) {
+                    return variableClase.type;
+                } else {
+                    throw new RuntimeException("La clase => " + ctx.IDENTIFIER().get(0).getText() + " <= no tiene el atributo => " + ctx.IDENTIFIER().get(1).getText() + " <=");
+                }
+            } else {
+                throw new RuntimeException("La clase => " + ctx.IDENTIFIER().get(0).getText() + " <= no existe");
+            }
+        }
     }
 
     @Override
     public Object visitFunctionCallFAST(myParser.FunctionCallFASTContext ctx) {
+        System.out.println("funcion");
         this.visit(ctx.functionCall());
         return null;
     }
@@ -450,22 +483,22 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitIntLiteralLAST(myParser.IntLiteralLASTContext ctx) {
-        return null;
+        return "int";
     }
 
     @Override
     public Object visitRealLiteralLAST(myParser.RealLiteralLASTContext ctx) {
-        return null;
+        return "int";
     }
 
     @Override
     public Object visitBoolLiteralLAST(myParser.BoolLiteralLASTContext ctx) {
-        return null;
+        return "boolean";
     }
 
     @Override
     public Object visitStringLiteralLAST(myParser.StringLiteralLASTContext ctx) {
-        return null;
+        return "string";
     }
 
     @Override

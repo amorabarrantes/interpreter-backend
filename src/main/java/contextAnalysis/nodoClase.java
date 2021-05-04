@@ -12,4 +12,13 @@ public class nodoClase extends nodo{
         super(tok, nivel, declCtx);
         this.atributos = atributos;
     }
+
+    public nodoVariable buscarVariableClase (String nombre){
+        for (nodoVariable obj : atributos) {
+            if (obj.tok.getText().equals(nombre)) {
+                return obj;
+            }
+        }
+        return null;
+    }
 }
