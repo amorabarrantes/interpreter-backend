@@ -275,7 +275,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitArrayTypeAST(myParser.ArrayTypeASTContext ctx) {
         String type = (String) this.visit(ctx.simpleType());
-        return type + "[]";
+        return type;
     }
 
     @Override
@@ -305,28 +305,49 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitSimpleExpressionAST(myParser.SimpleExpressionASTContext ctx) {
-
-
         String tipoTermino = (String) this.visit(ctx.term(0));
 
+        if (ctx.term().size() == 1) {
+            return tipoTermino;
+        } else {
+            for (int i = 1; i < ctx.additiveOp().size(); i++) {
+                String tipoAdditive = (String) this.visit(ctx.additiveOp(i - 1));
+                String tipoTerminoAuxiliar = (String) this.visit(ctx.term(i));
 
-        for (int i = 1; i < ctx.additiveOp().size(); i++) {
-            this.visit(ctx.additiveOp(i - 1));
-            this.visit(ctx.term(i));
+                if ((tipoTermino.equals("int") && (tipoAdditive.equals("mul") || tipoAdditive.equals("div")) && tipoTerminoAuxiliar.equals("int"))
+                        || tipoTermino.equals("boolean") && tipoAdditive.equals("and") && tipoTerminoAuxiliar.equals("boolean")) {
+                    tipoTermino = tipoTerminoAuxiliar;
+                } else {
+                    throw new RuntimeException("=> " + tipoTermino + " <= no se puede relacionar con => " + tipoTerminoAuxiliar +
+                            " <= cuando hay un => " + ctx.additiveOp(i - 1).getText() + " <= en medio");
+                }
+            }
+            return tipoTermino;
         }
-        return tipoTermino;
+
+
     }
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
-
         String tipoFactor = (String) this.visit(ctx.factor(0));
+        if (ctx.factor().size() == 1) {
+            return tipoFactor;
+        } else {
+            for (int i = 1; i < ctx.factor().size(); i++) {
+                String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
+                String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
 
-        for (int i = 1; i < ctx.factor().size(); i++) {
-            this.visit(ctx.multiplicativeOP(i - 1));
-            this.visit(ctx.factor(i));
+                if ((tipoFactor.equals("int") && (tipoMultiplicative.equals("mul") || tipoMultiplicative.equals("div")) && tipoFactorAuxiliar.equals("int"))
+                        || tipoFactor.equals("boolean") && tipoMultiplicative.equals("and") && tipoFactorAuxiliar.equals("boolean")) {
+                    tipoFactor = tipoFactorAuxiliar;
+                } else {
+                    throw new RuntimeException("=> " + tipoFactor + " <= no se puede relacionar con => " + tipoFactorAuxiliar +
+                            " <= cuando hay un => " + ctx.multiplicativeOP(i - 1).getText() + " <= en medio");
+                }
+            }
+            return tipoFactor;
         }
-        return tipoFactor;
     }
 
     @Override
@@ -362,45 +383,44 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitFunctionCallFAST(myParser.FunctionCallFASTContext ctx) {
-        System.out.println("funcion");
-        this.visit(ctx.functionCall());
-        return null;
+        String tipoFuncion = (String) this.visit(ctx.functionCall());
+        return tipoFuncion;
     }
 
     @Override
     public Object visitArrayLookUpFAST(myParser.ArrayLookUpFASTContext ctx) {
-        this.visit(ctx.arrayLookup());
-        return null;
+        String tipoArreglo = (String) this.visit(ctx.arrayLookup());
+        return tipoArreglo;
     }
 
     @Override
     public Object visitArrayLengthFAST(myParser.ArrayLengthFASTContext ctx) {
-        this.visit(ctx.arrayLength());
-        return null;
+        String tipoArrayLength = (String) this.visit(ctx.arrayLength());
+        return tipoArrayLength;
     }
 
     @Override
     public Object visitSubExpressionFAST(myParser.SubExpressionFASTContext ctx) {
-        this.visit(ctx.subExpression());
-        return null;
+        String tipoSubExpression = (String) this.visit(ctx.subExpression());
+        return tipoSubExpression;
     }
 
     @Override
     public Object visitArrayAllocationExpressionFAST(myParser.ArrayAllocationExpressionFASTContext ctx) {
-        this.visit(ctx.arrayAllocationExpression());
-        return null;
+        String tipoArrayAllocation = (String) this.visit(ctx.arrayAllocationExpression());
+        return tipoArrayAllocation;
     }
 
     @Override
     public Object visitAllocationExpressionFAST(myParser.AllocationExpressionFASTContext ctx) {
-        this.visit(ctx.allocationExpression());
-        return null;
+        String tipoAllocationExpression = (String) this.visit(ctx.allocationExpression());
+        return tipoAllocationExpression;
     }
 
     @Override
     public Object visitUnaryFAST(myParser.UnaryFASTContext ctx) {
-        this.visit(ctx.unary());
-        return null;
+        String tipoUnary = (String) this.visit(ctx.unary());
+        return tipoUnary;
     }
 
     @Override
@@ -460,25 +480,39 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitMulMultOPAST(myParser.MulMultOPASTContext ctx) {
-        return null;
+        return "mul";
     }
 
     @Override
     public Object visitDivMultOPAST(myParser.DivMultOPASTContext ctx) {
-        return null;
+        return "div";
     }
 
     @Override
     public Object visitAndMultOPAST(myParser.AndMultOPASTContext ctx) {
-        return null;
+        return "and";
     }
 
     @Override
     public Object visitUnaryAST(myParser.UnaryASTContext ctx) {
-        for (myParser.ExpressionContext expression : ctx.expression()) {
-            this.visit(expression);
+
+        if (ctx.MAS() != null || ctx.MINUS() != null) {
+            for (myParser.ExpressionContext expression : ctx.expression()) {
+                String tipoExpression = (String) this.visit(expression);
+                if (tipoExpression != "int") {
+                    throw new RuntimeException(tipoExpression + " <= fue encontrado y se requiere un entero");
+                }
+            }
+            return "int";
+        } else {
+            for (myParser.ExpressionContext expression : ctx.expression()) {
+                String tipoExpression = (String) this.visit(expression);
+                if (tipoExpression != "boolean") {
+                    throw new RuntimeException(tipoExpression + " <= fue encontrado y se requiere un boolean");
+                }
+            }
+            return "boolean";
         }
-        return null;
     }
 
     @Override
@@ -503,44 +537,80 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitAllocationExpressionAST(myParser.AllocationExpressionASTContext ctx) {
-        return null;
+        if (tablaClassDeclaration.retrieveNode(ctx.IDENTIFIER().getText()) != null) {
+            return ctx.IDENTIFIER().getText();
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " <= no es una clase declarada");
+        }
     }
 
     @Override
     public Object visitArrayAllocationExpressionAST(myParser.ArrayAllocationExpressionASTContext ctx) {
-        this.visit(ctx.simpleType());
+        //En caso de dar problemas, hay que agregar un [] al final de este string.
+        String tipoSimpleAsignacion = (String) this.visit(ctx.simpleType());
+
         this.visit(ctx.expression());
-        return null;
+        return tipoSimpleAsignacion;
     }
 
     @Override
     public Object visitSubExpressionAST(myParser.SubExpressionASTContext ctx) {
-        this.visit(ctx.expression());
-        return null;
+        String tipo = (String) this.visit(ctx.expression());
+        return tipo;
     }
 
     @Override
     public Object visitFunctionCallAST(myParser.FunctionCallASTContext ctx) {
-        if (ctx.actualParams() != null)
-            this.visit(ctx.actualParams());
-        return null;
+        nodoFuncion funcion = tablaFunciones.retrieveNode(ctx.IDENTIFIER().getText());
+        if (funcion != null) {
+
+            if (ctx.actualParams() != null) {
+                this.visit(ctx.actualParams());
+            }
+            return funcion.type;
+
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => no existe esta funcion");
+        }
     }
 
     @Override
     public Object visitActualParamsAST(myParser.ActualParamsASTContext ctx) {
-        for (myParser.ExpressionContext expression : ctx.expression())
-            this.visit(expression);
+        nodoFuncion funcion = tablaFunciones.retrieveNode(((myParser.FunctionCallASTContext) ctx.parent).IDENTIFIER().getText());
+
+        if (funcion.parametros.size() == ctx.expression().size()) {
+            for (int i = 0; i < ctx.expression().size(); i++) {
+                String tipoParametroFuncion = funcion.parametros.get(i).type;
+                String tipoExpressionArgumento = (String) this.visit(ctx.expression().get(i));
+
+                if (!tipoParametroFuncion.equals(tipoExpressionArgumento)) {
+                    throw new RuntimeException("La funcion => " + funcion.tok.getText() + " <= espera => " + tipoParametroFuncion + " <= y obtuvo => " + tipoExpressionArgumento + " <=");
+                }
+            }
+        } else {
+            throw new RuntimeException("La funcion tiene: " + funcion.parametros.size() + " parametros, pero recibió: " + ctx.expression().size() + " argumentos.");
+        }
         return null;
     }
 
     @Override
     public Object visitArrayLookupAST(myParser.ArrayLookupASTContext ctx) {
-        this.visit(ctx.expression());
-        return null;
+        nodoVariable tipoAsignacion = tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
+        if (tipoAsignacion != null) {
+            this.visit(ctx.expression());
+            return tipoAsignacion.type;
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " <= no es una variable definida.");
+        }
     }
 
     @Override
     public Object visitArrayLengthAST(myParser.ArrayLengthASTContext ctx) {
-        return null;
+        nodoVariable variable = tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
+        if (variable != null) {
+            return "int";
+        } else {
+            throw new RuntimeException(ctx.IDENTIFIER().getText() + " <= no es una variable declarada");
+        }
     }
 }

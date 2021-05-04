@@ -24,7 +24,7 @@ ifStatement:IF PLEFT expression PRIGHT block (ELSE block)?                      
 returnStatement:RETURN expression                                                           #returnAST;
 printStatement:PRINT expression                                                             #printAST;
 classDeclaration:CLASS IDENTIFIER BRACKETLEFT (classVariableDecl)* BRACKETRIGHT             #classDecAST;
-classVariableDecl:simpleType IDENTIFIER (ASSIGN expression)?                                #classVarDecAST;
+classVariableDecl:simpleType IDENTIFIER (ASSIGN expression)? PYCOMA                         #classVarDecAST;
 variableDecl:type IDENTIFIER (ASSIGN expression)?                                           #varDecAST;
 type:   simpleType                                                                          #simpleTypeTPAST
         |arrayType                                                                          #arrayTypeTPAST
@@ -39,15 +39,15 @@ arrayAssignment: IDENTIFIER SQUAREPLEFT expression SQUAREPRIGHT ASSIGN expressio
 expression: simpleExpression (relationalOp simpleExpression)*                               #expressionAST;
 simpleExpression: term (additiveOp term)*                                                   #simpleExpressionAST;
 term: factor (multiplicativeOP factor)*                                                     #termAST;
-factor:         literal                                                                     #literalFAST
-                |IDENTIFIER (DOT IDENTIFIER)?                                               #idFAST
-                |functionCall                                                               #functionCallFAST
-                |arrayLookup                                                                #arrayLookUpFAST
-                |arrayLength                                                                #arrayLengthFAST
-                |subExpression                                                              #subExpressionFAST
-                |arrayAllocationExpression                                                  #arrayAllocationExpressionFAST
-                |allocationExpression                                                       #allocationExpressionFAST
-                |unary                                                                      #unaryFAST;
+factor:         literal                                                                     #literalFAST //Comprobacion de asignacion listo
+                |IDENTIFIER (DOT IDENTIFIER)?                                               #idFAST      //Comprobacion de asignacion listo
+                |functionCall                                                               #functionCallFAST //Comprobacion de asignacion listo
+                |arrayLookup                                                                #arrayLookUpFAST //Comprobacion de asignacion listo
+                |arrayLength                                                                #arrayLengthFAST //Comprobacion de asignacion listo
+                |subExpression                                                              #subExpressionFAST //Comprobacion de asignacion listo
+                |arrayAllocationExpression                                                  #arrayAllocationExpressionFAST //Comprobacion de asignacion listo
+                |allocationExpression                                                       #allocationExpressionFAST //Comprobacion de asignacion listo
+                |unary                                                                      #unaryFAST; //Comprobacion de asignacion listo
 relationalOp:ORSYMBOL                                                                       #orSymbolROAST
             |AMPERTON                                                                       #ampertonROAST
             |SMALLER                                                                        #smallerROAST
