@@ -54,7 +54,7 @@ public class metodos {
         //Este codigo es para probar las asignaciones de String: "int x = " + '"'+ "cadena" + '"' + ";"
 
 
-        input = CharStreams.fromString("int x = funcioncita(1);");
+        input = CharStreams.fromString("boolean x = true and false;");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);
