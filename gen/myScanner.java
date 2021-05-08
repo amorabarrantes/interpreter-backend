@@ -1,4 +1,4 @@
-// Generated from D:/Programacion/WEB/online-interpreter/interpreter-backend/src/main/java\myScanner.g4 by ANTLR 4.9.1
+// Generated from C:/Users/Andres/Desktop/Tec/5to semestre/Compiladores/Proyecto/interpreter-backend/src/main/java\myScanner.g4 by ANTLR 4.9.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

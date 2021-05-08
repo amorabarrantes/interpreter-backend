@@ -53,8 +53,7 @@ public class metodos {
         //Este codigo es para probar las funcionDeclarations: int funcioncita () {} || funcionxd funcioncita () {}
         //Este codigo es para probar las asignaciones de String: "int x = " + '"'+ "cadena" + '"' + ";"
 
-
-        input = CharStreams.fromString("boolean x = true and false;");
+        input = CharStreams.fromString("{int x = 5; if(x > 5){int x=5;}}");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);
@@ -67,7 +66,8 @@ public class metodos {
 
         ac.visit(tree);
 
-        if (ErrorCatcher.INSTANCE.stringErrores == "") {
+
+        if (ErrorCatcher.INSTANCE.stringErrores.equals("")) {
             System.out.println("Compilación Exitosa sin errores");
         } else {
             String mensaje = ErrorCatcher.INSTANCE.stringErrores;

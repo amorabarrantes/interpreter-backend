@@ -7,7 +7,7 @@ PLEFT           : '(';
 PRIGHT          : ')';
 VIR             : '~';
 COLON           : ':';
-MAS            : '+';
+MAS             : '+';
 MINUS           : '-';
 MUL             : '*';
 DIV             : '/';
