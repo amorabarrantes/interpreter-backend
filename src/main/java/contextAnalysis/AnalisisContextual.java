@@ -13,6 +13,8 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     private final identificationTable<nodoClase> tablaClassDeclaration = new identificationTable<>(new LinkedList<>(), 0);
     private final identificationTable<nodoFuncion> tablaFunciones = new identificationTable<>(new LinkedList<>(), 0);
 
+    public String varErrores;
+
 
     @Override
     public Object visitProgramAST(myParser.ProgramASTContext ctx) {
@@ -21,7 +23,8 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                 this.visit(statement);
             return null;
         } catch (RuntimeException e) {
-            System.out.println(e);
+            varErrores = e.getMessage();
+            System.out.println(varErrores);
             return null;
         }
     }
@@ -88,17 +91,17 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitBlockAST(myParser.BlockASTContext ctx) {
-        tablaClassDeclaration.openScope();
-        tablaVarDeclaration.openScope();
         tablaFunciones.openScope();
+        tablaVarDeclaration.openScope();
+        tablaClassDeclaration.openScope();
 
         for (myParser.StatementContext statement : ctx.statement()){
             this.visit(statement);
         }
 
-        tablaClassDeclaration.closeScope();
-        tablaVarDeclaration.closeScope();
         tablaFunciones.closeScope();
+        tablaVarDeclaration.closeScope();
+        tablaClassDeclaration.closeScope();
         return null;
     }
 
@@ -108,6 +111,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         String type = (String) this.visit(ctx.type());
 
         //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 FUNCIONES CON EL MISMO IDENTIFICADOR.
+
         if (tablaFunciones.retrieve(ctx.IDENTIFIER().getText()) == null) {
             tablaFunciones.enter(new nodoFuncion(ctx.IDENTIFIER().getSymbol(), tablaFunciones.nivel, ctx, new ArrayList<nodoVariable>(), type));
         } else {
@@ -116,7 +120,9 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
         if (ctx.formalParams() != null)
             this.visit(ctx.formalParams());
+
         this.visit(ctx.block());
+
 
         tablaFunciones.imprimirNodoFuncion();
 
@@ -141,6 +147,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         nodoFuncion nodo = tablaFunciones.retrieveNode(nombreFuncion);
         nodo.parametros.add(new nodoVariable(ctx.IDENTIFIER().getSymbol(), 0, ctx, type));
 
+        tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel, ctx, type));
         return null;
     }
 

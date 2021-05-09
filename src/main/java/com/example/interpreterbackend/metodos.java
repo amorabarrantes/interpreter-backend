@@ -39,8 +39,6 @@ public class metodos {
         }
     }
 
-
-
     public static void main(String[] args) {
         myScanner inst = null;
         myParser parser = null;
@@ -53,7 +51,7 @@ public class metodos {
         //Este codigo es para probar las funcionDeclarations: int funcioncita () {} || funcionxd funcioncita () {}
         //Este codigo es para probar las asignaciones de String: "int x = " + '"'+ "cadena" + '"' + ";"
 
-        input = CharStreams.fromString("{int x = 5; if(x > 5){int x=5;}}");
+        input = CharStreams.fromString("int x; { int x; }");
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);

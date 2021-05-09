@@ -1,1 +1,3 @@
-int x = 5+5;
+int funcion(int q){
+    int x = 5+q;
+}
