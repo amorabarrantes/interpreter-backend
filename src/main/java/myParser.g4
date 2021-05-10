@@ -66,7 +66,8 @@ unary: (MAS|MINUS|EXCLAMATION) (expression)*                                    
 literal:INTLITERAL                                                                          #intLiteralLAST
         |REALLITERAL                                                                        #realLiteralLAST
         |BOOLLITERAL                                                                        #boolLiteralLAST
-        |STRINGLITERAL                                                                      #stringLiteralLAST;
+        |STRINGLITERAL                                                                      #stringLiteralLAST
+        |CHARLITERAL                                                                        #charLiteralLAST;
 allocationExpression: NEW IDENTIFIER PLEFT PRIGHT                                           #allocationExpressionAST;
 arrayAllocationExpression: NEW simpleType SQUAREPLEFT expression SQUAREPRIGHT               #arrayAllocationExpressionAST;
 subExpression:PLEFT expression PRIGHT                                                       #subExpressionAST;

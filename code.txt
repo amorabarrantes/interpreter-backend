@@ -1,3 +1,72 @@
-int funcion(int q){
-    int x = 5+q;
+boolean d;
+char x = 'A';
+
+int [] f(boolean o, int g, boolean z)
+{
+    boolean b;
+    int x;
+    int [] a;
+    {
+      print("codigo de f");
+      d = false;
+      x = -9;
+      a = new int[x];
+    }
+    return a;
+}
+
+int metodo()
+{
+    int x;
+    {
+      boolean y = true;
+      print("codigo" + "de metodo");
+      print x * 1;
+    }
+    return x;
+}
+
+int metodo2()
+{
+    return 2;
+}
+
+class hola{
+    int x;
+    int y;
+    string tira;
+};
+
+boolean k()
+{
+    boolean b;
+    boolean r;
+    int x;
+    hola j;
+    int [] a;
+    {
+      print("codigo de k...");
+      x = 5;
+      r = false;
+      d = true;
+      j = new hola();
+
+      if ((x < 1) || (x == 1))
+      { a = new int[x]; }
+      else
+      { a = new int[j.y]; } //ERROR DE TIPOS
+    }
+
+    a = f(true,10,true); // DOBLE ERROR, DE TIPOS Y DE CANTIDAD DE PARÁMETROS
+    a = f(true,10,r);
+
+    j.x = a[x];
+    a[2] = 6; //ERROR DE TIPOS
+    a[5] = 5; //ERROR DE TIPOS
+
+    int operacion;
+    operacion = 15; //ERROR DE VARIABLE NO DECLARADA
+
+    return d; //ERROR PORQUE LA FUNCIÓN DEBE TENER RETURN, PROBAR QUITANDO COMENTARIO INICIAL
+
 }

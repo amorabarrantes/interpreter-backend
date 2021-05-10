@@ -2,6 +2,8 @@ package contextAnalysis;
 
 import generated.myParser;
 import generated.myParserBaseVisitor;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -95,7 +97,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         tablaVarDeclaration.openScope();
         tablaClassDeclaration.openScope();
 
-        for (myParser.StatementContext statement : ctx.statement()){
+        for (myParser.StatementContext statement : ctx.statement()) {
             this.visit(statement);
         }
 
@@ -111,9 +113,8 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         String type = (String) this.visit(ctx.type());
 
         //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 FUNCIONES CON EL MISMO IDENTIFICADOR.
-
         if (tablaFunciones.retrieve(ctx.IDENTIFIER().getText()) == null) {
-            tablaFunciones.enter(new nodoFuncion(ctx.IDENTIFIER().getSymbol(), tablaFunciones.nivel, ctx, new ArrayList<nodoVariable>(), type));
+            tablaFunciones.enter(new nodoFuncion(ctx.IDENTIFIER().getSymbol(), tablaFunciones.nivel, ctx, new ArrayList<>(), type));
         } else {
             throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una funcion ya existente");
         }
@@ -123,8 +124,27 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
         this.visit(ctx.block());
 
-
         tablaFunciones.imprimirNodoFuncion();
+
+
+
+        boolean flag = false;
+        for(ParseTree child: ctx.children){
+            if(child instanceof myParser.BlockASTContext){
+                myParser.BlockASTContext blockChild = (myParser.BlockASTContext) child;
+                for(ParserRuleContext statement: blockChild.statement()){
+                    if(statement instanceof myParser.ReturnSTASTContext){
+                        flag = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(!flag){
+            throw new RuntimeException("No se puede declarar una funcion sin return.");
+        }
+
 
         return null;
     }
@@ -145,9 +165,10 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
         String nombreFuncion = ((myParser.FunctionDecASTContext) (ctx.parent.parent)).IDENTIFIER().getText();
         nodoFuncion nodo = tablaFunciones.retrieveNode(nombreFuncion);
-        nodo.parametros.add(new nodoVariable(ctx.IDENTIFIER().getSymbol(), 0, ctx, type));
 
-        tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel, ctx, type));
+        nodo.parametros.add(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel + 1, ctx, type));
+        tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel + 1, ctx, type));
+
         return null;
     }
 
@@ -170,8 +191,25 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitReturnAST(myParser.ReturnASTContext ctx) {
-        System.out.println("");
-        this.visit(ctx.expression());
+        String tipo = (String) this.visit(ctx.expression());
+
+        if (tablaFunciones.ll.size() != 0) {
+            ParserRuleContext variable = ctx.getParent();
+
+            while (variable != null) {
+                if (variable.getClass().getSimpleName().equals("FunctionDecASTContext")) {
+                    nodoFuncion funcion = tablaFunciones.ll.get(tablaFunciones.ll.size() - 1);
+
+                    if (!funcion.type.equals(tipo)) {
+                        throw new RuntimeException("La funcion => " + funcion.tok.getText() + " <= es de tipo => " + funcion.type + " <= pero retorna => " + tipo + " <=");
+                    }
+                }
+                variable = variable.getParent();
+            }
+        } else {
+            throw new RuntimeException("No se puede retornar fuera de una funcion.");
+        }
+
         return null;
     }
 
@@ -186,7 +224,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
         //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 CLASES CON EL MISMO IDENTIFICADOR.
         if (tablaClassDeclaration.retrieve(ctx.IDENTIFIER().getText()) == null) {
-            tablaClassDeclaration.enter(new nodoClase(ctx.IDENTIFIER().getSymbol(), tablaClassDeclaration.nivel, ctx, new ArrayList<nodoVariable>()));
+            tablaClassDeclaration.enter(new nodoClase(ctx.IDENTIFIER().getSymbol(), tablaClassDeclaration.nivel, ctx, new ArrayList<>()));
         } else {
             throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una clase ya existente");
         }
@@ -229,7 +267,10 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitVarDecAST(myParser.VarDecASTContext ctx) {
         String type = (String) this.visit(ctx.type());
-        if (tablaVarDeclaration.retrieve(ctx.IDENTIFIER().getText()) == null) {
+
+        nodoVariable retornoVariable = tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
+
+        if (retornoVariable == null || retornoVariable.nivel != tablaVarDeclaration.nivel) {
             if (ctx.expression() != null) {
                 String tipoExpression = (String) this.visit(ctx.expression());
                 if (!type.equals(tipoExpression)) {
@@ -239,7 +280,6 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), tablaVarDeclaration.nivel, ctx, type));
         } else
             throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una variable ya existente");
-
 
         tablaVarDeclaration.imprimirNodoVariable();
         return null;
@@ -310,21 +350,28 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                 throw new RuntimeException(ctx.IDENTIFIER(0).getText() + " <= no esta declarado como variable.");
             }
         } else {
-            String tipoExpression = (String) this.visit(ctx.expression());
-            nodoClase retrieveClase = tablaClassDeclaration.retrieveNode(ctx.IDENTIFIER(0).getText());
-            if (retrieveClase != null) {
-                nodoVariable retrieveAtrituto = retrieveClase.buscarVariableClase(ctx.IDENTIFIER(1).getText());
-                if (retrieveAtrituto != null) {
-                    if (retrieveAtrituto.type.equals(tipoExpression)) {
-                        return tipoExpression;
+            nodoVariable variable = tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER(0).getText());
+
+            if (variable != null) {
+                String tipoExpression = (String) this.visit(ctx.expression());
+                nodoClase retrieveClase = tablaClassDeclaration.retrieveNode(variable.type);
+
+                if (retrieveClase != null) {
+                    nodoVariable retrieveAtrituto = retrieveClase.buscarVariableClase(ctx.IDENTIFIER(1).getText());
+                    if (retrieveAtrituto != null) {
+                        if (retrieveAtrituto.type.equals(tipoExpression)) {
+                            return tipoExpression;
+                        } else {
+                            throw new RuntimeException(ctx.IDENTIFIER(1).getText() + " espera => " + retrieveAtrituto.type + " pero recibió => " + tipoExpression);
+                        }
                     } else {
-                        throw new RuntimeException(ctx.IDENTIFIER(1).getText() + " espera => " + retrieveAtrituto.type + " pero recibió => " + tipoExpression);
+                        throw new RuntimeException("La clase => " + ctx.IDENTIFIER(0).getText() + " <= no contiene al atributo => " + ctx.IDENTIFIER(1).getText() + " <=");
                     }
                 } else {
-                    throw new RuntimeException("La clase => " + ctx.IDENTIFIER(0).getText() + " <= no contiene al atributo => " + ctx.IDENTIFIER(1).getText() + " <=");
+                    throw new RuntimeException(ctx.IDENTIFIER(0).getText() + " <= no esta declarado como clase.");
                 }
             } else {
-                throw new RuntimeException(ctx.IDENTIFIER(0).getText() + " <= no esta declarado como clase.");
+                throw new RuntimeException("La variable => " + ctx.IDENTIFIER(0).getText() + " <= no esta declarada");
             }
         }
     }
@@ -354,7 +401,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
         String tipoSimpleExpression = (String) this.visit(ctx.simpleExpression(0));
 
-        ArrayList<String> intRelationals = new ArrayList<String>() {
+        ArrayList<String> intRelationals = new ArrayList<>() {
             {
                 add("smaller");
                 add("greather");
@@ -365,14 +412,14 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             }
         };
 
-        ArrayList<String> allRelationals = new ArrayList<String>() {
+        ArrayList<String> allRelationals = new ArrayList<>() {
             {
                 add("equals");
                 add("different");
             }
         };
 
-        ArrayList<String> booleanRelationals = new ArrayList<String>() {
+        ArrayList<String> booleanRelationals = new ArrayList<>() {
             {
                 add("orsymbol");
                 add("ampertor");
@@ -461,11 +508,10 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                 case 0:
                     return tipoTermino;
                 case 1:
+                case 3:
                     return "int";
                 case 2:
                     return "string";
-                case 3:
-                    return "int";
                 default:
                     return "null";
             }
@@ -475,9 +521,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
         String tipoFactor = (String) this.visit(ctx.factor(0));
-        if (ctx.factor().size() == 1) {
-            return tipoFactor;
-        } else {
+        if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
                 String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
                 String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
@@ -490,8 +534,8 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                             " <= cuando hay un => " + ctx.multiplicativeOP(i - 1).getText() + " <= en medio");
                 }
             }
-            return tipoFactor;
         }
+        return tipoFactor;
     }
 
     @Override
@@ -510,17 +554,20 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             } else {
                 throw new RuntimeException(ctx.IDENTIFIER().get(0).getText() + " no es una variable existente");
             }
-        } else { //Asignacion de una variable de clase
-            nodoClase clase = tablaClassDeclaration.retrieveNode(ctx.IDENTIFIER().get(0).getText());
-            if (clase != null) {
+        } else { //Asignacion de una variable de tipo clase.
+            nodoVariable variable = tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().get(0).getText());
+
+            if (variable != null) {
+                nodoClase clase = tablaClassDeclaration.retrieveNode(variable.type);
                 nodoVariable variableClase = clase.buscarVariableClase(ctx.IDENTIFIER().get(1).getText());
+
                 if (variableClase != null) {
                     return variableClase.type;
                 } else {
                     throw new RuntimeException("La clase => " + ctx.IDENTIFIER().get(0).getText() + " <= no tiene el atributo => " + ctx.IDENTIFIER().get(1).getText() + " <=");
                 }
             } else {
-                throw new RuntimeException("La clase => " + ctx.IDENTIFIER().get(0).getText() + " <= no existe");
+                throw new RuntimeException("La variable => " + ctx.IDENTIFIER().get(0).getText() + " <= no existe");
             }
         }
     }
@@ -643,7 +690,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         if (ctx.MAS() != null || ctx.MINUS() != null) {
             for (myParser.ExpressionContext expression : ctx.expression()) {
                 String tipoExpression = (String) this.visit(expression);
-                if (tipoExpression != "int") {
+                if (!tipoExpression.equals("int")) {
                     throw new RuntimeException(tipoExpression + " <= fue encontrado y se requiere un entero");
                 }
             }
@@ -651,7 +698,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         } else {
             for (myParser.ExpressionContext expression : ctx.expression()) {
                 String tipoExpression = (String) this.visit(expression);
-                if (tipoExpression != "boolean") {
+                if (!tipoExpression.equals("boolean")) {
                     throw new RuntimeException(tipoExpression + " <= fue encontrado y se requiere un boolean");
                 }
             }
@@ -680,6 +727,11 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     }
 
     @Override
+    public Object visitCharLiteralLAST(myParser.CharLiteralLASTContext ctx) {
+        return "char";
+    }
+
+    @Override
     public Object visitAllocationExpressionAST(myParser.AllocationExpressionASTContext ctx) {
         if (tablaClassDeclaration.retrieveNode(ctx.IDENTIFIER().getText()) != null) {
             return ctx.IDENTIFIER().getText();
@@ -691,9 +743,12 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitArrayAllocationExpressionAST(myParser.ArrayAllocationExpressionASTContext ctx) {
         //En caso de dar problemas, hay que agregar un [] al final de este string.
-        String tipoSimpleAsignacion = (String) this.visit(ctx.simpleType());
 
-        this.visit(ctx.expression());
+        String tipoSimpleAsignacion = (String) this.visit(ctx.simpleType());
+        String tipoExpression = (String) this.visit(ctx.expression());
+        if (!tipoSimpleAsignacion.equals(tipoExpression)) {
+            throw new RuntimeException("El arreglo espera => " + tipoSimpleAsignacion + " <= y obtuvo => " + tipoExpression + " <=");
+        }
         return tipoSimpleAsignacion;
     }
 

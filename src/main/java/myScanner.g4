@@ -29,12 +29,12 @@ BRACKETRIGHT    : '}';
 CAT             : '#';
 DOLLAR          : '$';
 PERCENT         : '%';
-AMPERTON        : '&';
+AMPERTON        : '&&';
 QUESTIONMARK    : '?';
 AT              : '@';
 EXPONENTIAL     : '^';
-SIMPLEQMARK     : '`';
-ORSYMBOL        : '|';
+SIMPLEQMARK     : '\'';
+ORSYMBOL        : '||';
 
 //palabras reservadas
 AND     : 'and';
@@ -44,6 +44,7 @@ LENGTH  : 'length';
 NEW     : 'new';
 CHAR    : 'char';
 INT     : 'int';
+REAL    : 'real';
 STRING  : 'string';
 fragment TRUE: 'true';
 fragment FALSE   : 'false';
@@ -64,20 +65,22 @@ VAR     : 'var';
 
 //LITERAL
 INTLITERAL: DIGIT DIGIT*;
-REALLITERAL: DIGIT DIGIT* DOT DIGIT*| DOT DIGIT DIGIT*;
+REALLITERAL: DIGIT DIGIT* DOT DIGIT* | DOT DIGIT DIGIT*;
 BOOLLITERAL: TRUE|FALSE;
 STRINGLITERAL:QMARK (PRINTABLE)* QMARK;
-
+CHARLITERAL: SIMPLEQMARK PRINTABLE SIMPLEQMARK;
 
 //PRINTABLE
-fragment PRINTABLE: DIGIT|LETTER|WS|EXCLAMATION|EQUALS|QMARK|CAT|DOLLAR|PERCENT|AMPERTON|PLEFT|PRIGHT|MUL|MAS|DIFFERENT|COMMA|MINUS|DOT|DIV
-                    |COLON|PYCOMA|SMALLER|SMALLEREQUAL|ASSIGN|GREATHER|AND|OR|GREATHEREQUAL|QUESTIONMARK|AT|SQUAREPLEFT|SQUAREPRIGHT|EXPONENTIAL|UNDERSCORE|SIMPLEQMARK
-                    |BRACKETLEFT|ORSYMBOL|BRACKETRIGHT|VIR;
+fragment PRINTABLE: '\\' ["\\] | ~["\\\r\n];
+
 
 //IDENTIFIER
 IDENTIFIER:(UNDERSCORE|LETTER)(UNDERSCORE|LETTER|DIGIT)*;
 
 WS:[ \r\t\n]+ -> skip;
+
+COMMENT: '/*' .*? '*/' -> skip;
+LINE_COMMENT: '//' ~[\r\n]* -> skip;
 
 //FRAGMENTS
 fragment LETTER: 'a'..'z'|'A'..'Z';

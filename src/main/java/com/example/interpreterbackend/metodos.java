@@ -39,7 +39,7 @@ public class metodos {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         myScanner inst = null;
         myParser parser = null;
         ParseTree tree = null;
@@ -51,7 +51,8 @@ public class metodos {
         //Este codigo es para probar las funcionDeclarations: int funcioncita () {} || funcionxd funcioncita () {}
         //Este codigo es para probar las asignaciones de String: "int x = " + '"'+ "cadena" + '"' + ";"
 
-        input = CharStreams.fromString("int x; { int x; }");
+        input = CharStreams.fromFileName("code.txt");
+
         inst = new myScanner(input);
         inst.addErrorListener(ErrorCatcher.INSTANCE);
         tokens = new CommonTokenStream(inst);

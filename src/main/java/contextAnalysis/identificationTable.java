@@ -40,7 +40,8 @@ public class identificationTable<generico extends nodo> {
     }
 
     public generico buscarNodo(String nombre) {
-        for (generico obj : ll) {
+        for (int x = ll.size()-1; x>=0 ; x--){
+            generico obj = ll.get(x);
             if (obj.tok.getText().equals(nombre) && obj.nivel <= nivel) {
                 return (obj);
             }

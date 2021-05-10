@@ -452,6 +452,13 @@ public interface myParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStringLiteralLAST(myParser.StringLiteralLASTContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code charLiteralLAST}
+	 * labeled alternative in {@link myParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCharLiteralLAST(myParser.CharLiteralLASTContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code allocationExpressionAST}
 	 * labeled alternative in {@link myParser#allocationExpression}.
 	 * @param ctx the parse tree
