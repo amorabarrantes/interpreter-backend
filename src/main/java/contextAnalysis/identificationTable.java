@@ -40,7 +40,7 @@ public class identificationTable<generico extends nodo> {
     }
 
     public generico buscarNodo(String nombre) {
-        for (int x = ll.size()-1; x>=0 ; x--){
+        for (int x = ll.size() - 1; x >= 0; x--) {
             generico obj = ll.get(x);
             if (obj.tok.getText().equals(nombre) && obj.nivel <= nivel) {
                 return (obj);
@@ -103,5 +103,45 @@ public class identificationTable<generico extends nodo> {
             }
         }
         System.out.println("\n----- FIN TABLA FUNCIONES------");
+    }
+
+    public String retornarStringTablaVariable() {
+        StringBuilder tabla = new StringBuilder();
+        tabla.append("----- INICIO TABLA VARIABLES ------");
+        for (generico obj : ll) {
+            tabla.append("\nNombre: ").append(obj.tok.getText()).append(" - ").append(obj.nivel).append(" - ").append(((nodoVariable) obj).type);
+        }
+        tabla.append("\n----- FIN TABLA VARIABLES------");
+
+        return tabla.toString();
+    }
+
+    public String retornarStringTablaClase() {
+        StringBuilder tabla = new StringBuilder();
+        tabla.append("----- INICIO TABLA CLASES------");
+        for (generico obj : ll) {
+            tabla.append("\nNombre: ").append(obj.tok.getText()).append(" - Nivel: ").append(obj.nivel);
+            tabla.append("\n  Atributos:");
+            for (nodoVariable obj2 : ((nodoClase) obj).atributos) {
+                tabla.append("\n\tNombre: ").append(obj2.tok.getText()).append(" - Nivel: ").append(obj2.nivel).append(" - ").append(obj2.type);
+            }
+        }
+        tabla.append("\n----- FIN TABLA CLASES------");
+
+        return tabla.toString();
+    }
+
+    public String retornarStringTablaFuncion() {
+        StringBuilder tabla = new StringBuilder();
+        tabla.append("----- INICIO TABLA FUNCIONES------");
+        for (generico obj : ll) {
+            tabla.append("\nNombre: ").append(obj.tok.getText()).append(" - Nivel: ").append(obj.nivel).append(" - Tipo: ").append(((nodoFuncion) obj).type);
+            tabla.append("\n  Parametros:");
+            for (nodoVariable obj2 : ((nodoFuncion) obj).parametros) {
+                tabla.append("\n\tNombre: ").append(obj2.tok.getText()).append(" - Nivel: ").append(obj2.nivel).append(" - Tipo: ").append(obj2.type);
+            }
+        }
+        tabla.append("\n----- FIN TABLA FUNCIONES------");
+        return tabla.toString();
     }
 }
