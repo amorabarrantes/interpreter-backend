@@ -4,9 +4,9 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 public class nodo {
-    Token tok;
-    int nivel;
-    ParserRuleContext declCtx;
+    public Token tok;
+    public int nivel;
+    public ParserRuleContext declCtx;
 
     public nodo(Token tok, int nivel, ParserRuleContext declCtx) {
         this.tok = tok;

@@ -6,8 +6,8 @@ import org.antlr.v4.runtime.Token;
 import java.util.ArrayList;
 
 public class nodoFuncion extends nodo{
-    ArrayList<nodoVariable> parametros;
-    String type;
+    public ArrayList<nodoVariable> parametros;
+    public String type;
 
     public nodoFuncion(Token tok, int nivel, ParserRuleContext declCtx, ArrayList<nodoVariable> parametros, String type) {
         super(tok, nivel, declCtx);

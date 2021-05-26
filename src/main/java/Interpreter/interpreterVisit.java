@@ -1,19 +1,22 @@
-package contextAnalysis;
+package Interpreter;
 
+import contextAnalysis.claseTablas;
+import contextAnalysis.nodoClase;
+import contextAnalysis.nodoFuncion;
+import contextAnalysis.nodoVariable;
 import generated.myParser;
 import generated.myParserBaseVisitor;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 
-
-public class AnalisisContextual extends myParserBaseVisitor<Object> {
+public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     claseTablas ct = claseTablas.getIsntance();
-
-    public String varErrores = "";
+    public String varErrores;
 
 
     @Override
@@ -24,6 +27,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             return null;
         } catch (RuntimeException e) {
             varErrores = e.getMessage();
+            System.out.println(varErrores);
             return null;
         }
     }
@@ -121,7 +125,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
         this.visit(ctx.block());
 
-        //ct.tablaFunciones.imprimirNodoFuncion();
+        ct.tablaFunciones.imprimirNodoFuncion();
 
 
         boolean flag = false;
@@ -216,72 +220,74 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitClassDecAST(myParser.ClassDecASTContext ctx) {
+        if (ctx.classVariableDecl().size() > 0) {
+            HashMap<String, Serializable> hash_map = new HashMap<String, java.io.Serializable>();
 
-        //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 CLASES CON EL MISMO IDENTIFICADOR.
-        if (ct.tablaClassDeclaration.retrieve(ctx.IDENTIFIER().getText()) == null) {
-            ct.tablaClassDeclaration.enter(new nodoClase(ctx.IDENTIFIER().getSymbol(), ct.tablaClassDeclaration.nivel, ctx, new ArrayList<>()));
-        } else {
-            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una clase ya existente");
+            for (myParser.ClassVariableDeclContext classVar : ctx.classVariableDecl()) {
+                String clave = classVar.getChild(1).getText();
+                Object valor = this.visit(classVar);
+                hash_map.put(clave, (Serializable) valor);
+            }
+
+            ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, "clase", hash_map));
+
         }
 
-        for (myParser.ClassVariableDeclContext classVar : ctx.classVariableDecl())
-            this.visit(classVar);
-
-        //ct.tablaClassDeclaration.imprimirNodoClase();
+        ct.tablaValores.imprimirNodoValores();
         return null;
     }
 
     @Override
     public Object visitClassVarDecAST(myParser.ClassVarDecASTContext ctx) {
-        String type = (String) this.visit(ctx.simpleType());
-        nodoClase clasePadre = ct.tablaClassDeclaration.retrieveNode(((myParser.ClassDecASTContext) ctx.parent).IDENTIFIER().getText());
-
-        nodoVariable nodoNuevo = new nodoVariable(ctx.IDENTIFIER().getSymbol(), 0, ctx, type);
-
-        boolean existe = false;
-
-        for (nodoVariable obj : clasePadre.atributos) {
-            if (obj.declCtx.getText().equals(nodoNuevo.declCtx.getText())) {
-                existe = true;
-            }
-        }
-
-        if (!existe) {
-            clasePadre.atributos.add(nodoNuevo);
-        } else {
-            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es un atributo ya existente");
-        }
-
-
         if (ctx.expression() != null) {    //En este if hay que comprobar que la asignacion sea compatible con el tipo.
-            String tipoAsignacion = (String) this.visit(ctx.expression());
-
-            if(!tipoAsignacion.equals(type)){
-                throw new RuntimeException(ctx.IDENTIFIER().getText() + " espera => " + type + " pero recibió => " + tipoAsignacion);
-            }
+            return this.visit(ctx.expression());
         }
 
-        return type;
+        return null;
     }
 
     @Override
     public Object visitVarDecAST(myParser.VarDecASTContext ctx) {
         String type = (String) this.visit(ctx.type());
 
-        nodoVariable retornoVariable = ct.tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
 
-        if (retornoVariable == null || retornoVariable.nivel != ct.tablaVarDeclaration.nivel) {
-            if (ctx.expression() != null) {
-                String tipoExpression = (String) this.visit(ctx.expression());
-                if (!type.equals(tipoExpression)) {
-                    throw new RuntimeException(ctx.IDENTIFIER().getText() + " espera => " + type + " pero recibió => " + tipoExpression);
-                }
+        if (ctx.expression() != null) {
+            String valorExpression = (String) this.visit(ctx.expression());
+
+            switch (type) {
+                case "int":
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, Integer.parseInt(valorExpression)));
+                    break;
+                case "string":
+                    String subString = valorExpression.replace("\"", "");
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, subString));
+                    break;
+                case "boolean":
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, Boolean.parseBoolean(valorExpression)));
+                    break;
+                case "char":
+                    String subChar = valorExpression.replace("'", "");
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, subChar.charAt(0)));
+                    break;
+
+                case "int[]":
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, new int[Integer.parseInt(valorExpression)]));
+                    break;
+                case "boolean[]":
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, new boolean[Integer.parseInt(valorExpression)]));
+                    break;
+                case "string[]":
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, new String[Integer.parseInt(valorExpression)]));
+                    break;
+                case "char[]":
+                    ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, new char[Integer.parseInt(valorExpression)]));
+                    break;
             }
-            ct.tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), ct.tablaVarDeclaration.nivel, ctx, type));
-        } else
-            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una variable ya existente");
+        } else {
+            ct.tablaValores.enter(new nodoValor<>(ctx.IDENTIFIER().getSymbol(), ct.tablaValores.nivel, ctx, type, null));
+        }
 
-        //ct.tablaVarDeclaration.imprimirNodoVariable();
+        ct.tablaValores.imprimirNodoValores();
         return null;
     }
 
@@ -332,7 +338,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitArrayTypeAST(myParser.ArrayTypeASTContext ctx) {
         String type = (String) this.visit(ctx.simpleType());
-        return type;
+        return type + "[]";
     }
 
     @Override
@@ -398,35 +404,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitExpressionAST(myParser.ExpressionASTContext ctx) {
-
-        String tipoSimpleExpression = (String) this.visit(ctx.simpleExpression(0));
-
-        ArrayList<String> intRelationals = new ArrayList<>() {
-            {
-                add("smaller");
-                add("greather");
-                add("equals");
-                add("different");
-                add("smallerequal");
-                add("greatherequal");
-            }
-        };
-
-        ArrayList<String> allRelationals = new ArrayList<>() {
-            {
-                add("equals");
-                add("different");
-            }
-        };
-
-        ArrayList<String> booleanRelationals = new ArrayList<>() {
-            {
-                add("orsymbol");
-                add("ampertor");
-                add("equals");
-                add("different");
-            }
-        };
+        Object tipoSimpleExpression = this.visit(ctx.simpleExpression(0));
 
         if (ctx.simpleExpression().size() == 1) {
             return tipoSimpleExpression;
@@ -434,36 +412,14 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             for (int i = 1; i < ctx.simpleExpression().size(); i++) {
                 String tipoRelationOP = (String) this.visit(ctx.relationalOp(i - 1));
                 String tipoSimpleExpressionAuxiliar = (String) this.visit(ctx.simpleExpression(i));
-
-                if (tipoSimpleExpression.equals("boolean") && booleanRelationals.contains(tipoRelationOP) && tipoSimpleExpressionAuxiliar.equals("boolean")) {
-                    tipoSimpleExpression = tipoSimpleExpressionAuxiliar;
-
-                } else if (tipoSimpleExpression.equals("int") && intRelationals.contains(tipoRelationOP) && tipoSimpleExpressionAuxiliar.equals("int")) {
-                    tipoSimpleExpression = tipoSimpleExpressionAuxiliar;
-
-                } else if (tipoSimpleExpression.equals(tipoSimpleExpressionAuxiliar) && allRelationals.contains(tipoRelationOP)) {
-                    tipoSimpleExpression = tipoSimpleExpressionAuxiliar;
-                } else {
-                    throw new RuntimeException("=> " + tipoSimpleExpression + " <= no se puede relacionar con => " + tipoSimpleExpressionAuxiliar +
-                            " <= cuando hay un => " + ctx.relationalOp(i - 1).getText() + " <= en medio");
-                }
             }
-            return "boolean";
+            return null;
         }
     }
 
     @Override
     public Object visitSimpleExpressionAST(myParser.SimpleExpressionASTContext ctx) {
-        String tipoTermino = (String) this.visit(ctx.term(0));
-
-        //Retorna 0 cuando es concatenacion de booleanos mediante or.
-        //Retorna 1 cuando es una resta de enteros.
-        //Retorna 2 cuando es una concatenacion mediante + retornando string
-        //Retorna 3 cuando es una suma de enteros.
-        int bandera = 0;
-
-        boolean concatenacion = false;
-
+        Object tipoTermino = this.visit(ctx.term(0));
 
         if (ctx.term().size() == 1) {
             return tipoTermino;
@@ -471,68 +427,24 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
             String additiveAux = (String) this.visit(ctx.additiveOp(0));
             String termAux = (String) this.visit(ctx.term(1));
-            if ((tipoTermino.equals("string") && additiveAux.equals("mas")) ||
-                    (additiveAux.equals("mas") && termAux.equals("string"))) {
-                concatenacion = true;
-                bandera = 2;
-            }
 
             for (int i = 1; i < ctx.term().size(); i++) {
                 String tipoAdditive = (String) this.visit(ctx.additiveOp(i - 1));
                 String tipoTerminoAuxiliar = (String) this.visit(ctx.term(i));
-
-                //Este if entra solo cuando se concatenan booleanos con un or.
-                if (tipoTermino.equals("boolean") && tipoAdditive.equals("or") && tipoTerminoAuxiliar.equals("boolean")) {
-                    tipoTermino = tipoTerminoAuxiliar;
-
-                    //A este else if entra solo si se va a hacer una concatenacion de strings.
-                } else if (tipoTermino.equals("int") && tipoAdditive.equals("minus") && tipoTerminoAuxiliar.equals("int")) {
-                    tipoTermino = tipoTerminoAuxiliar;
-                    bandera = 1;
-
-                } else if (tipoTermino.equals("int") && tipoAdditive.equals("mas") && tipoTerminoAuxiliar.equals("int")) {
-                    if (concatenacion)
-                        bandera = 2;
-                    else
-                        bandera = 3;
-
-                    tipoTermino = tipoTerminoAuxiliar;
-                } else if (concatenacion) {
-                    tipoTermino = tipoTerminoAuxiliar;
-                } else {
-                    throw new RuntimeException("=> " + tipoTermino + " <= no se puede relacionar con => " + tipoTerminoAuxiliar +
-                            " <= cuando hay un => " + ctx.additiveOp(i - 1).getText() + " <= en medio");
-                }
             }
-            switch (bandera) {
-                case 0:
-                    return tipoTermino;
-                case 1:
-                case 3:
-                    return "int";
-                case 2:
-                    return "string";
-                default:
-                    return "null";
-            }
+            return null;
         }
+
     }
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
-        String tipoFactor = (String) this.visit(ctx.factor(0));
+        Object tipoFactor = this.visit(ctx.factor(0));
+
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
                 String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
                 String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
-
-                if ((tipoFactor.equals("int") && (tipoMultiplicative.equals("mul") || tipoMultiplicative.equals("div")) && tipoFactorAuxiliar.equals("int"))
-                        || tipoFactor.equals("boolean") && tipoMultiplicative.equals("and") && tipoFactorAuxiliar.equals("boolean")) {
-                    tipoFactor = tipoFactorAuxiliar;
-                } else {
-                    throw new RuntimeException("=> " + tipoFactor + " <= no se puede relacionar con => " + tipoFactorAuxiliar +
-                            " <= cuando hay un => " + ctx.multiplicativeOP(i - 1).getText() + " <= en medio");
-                }
             }
         }
         return tipoFactor;
@@ -540,7 +452,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitLiteralFAST(myParser.LiteralFASTContext ctx) {
-        String tipoLiteral = (String) this.visit(ctx.literal());
+        Object tipoLiteral = this.visit(ctx.literal());
         return tipoLiteral;
     }
 
@@ -598,7 +510,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitArrayAllocationExpressionFAST(myParser.ArrayAllocationExpressionFASTContext ctx) {
-        String tipoArrayAllocation = (String) this.visit(ctx.arrayAllocationExpression());
+        Object tipoArrayAllocation = this.visit(ctx.arrayAllocationExpression());
         return tipoArrayAllocation;
     }
 
@@ -708,27 +620,28 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitIntLiteralLAST(myParser.IntLiteralLASTContext ctx) {
-        return "int";
+        return ctx.INTLITERAL().getText();
+
     }
 
     @Override
     public Object visitRealLiteralLAST(myParser.RealLiteralLASTContext ctx) {
-        return "int";
+        return ctx.REALLITERAL().getText();
     }
 
     @Override
     public Object visitBoolLiteralLAST(myParser.BoolLiteralLASTContext ctx) {
-        return "boolean";
+        return ctx.BOOLLITERAL().getText();
     }
 
     @Override
     public Object visitStringLiteralLAST(myParser.StringLiteralLASTContext ctx) {
-        return "string";
+        return ctx.STRINGLITERAL().getText();
     }
 
     @Override
     public Object visitCharLiteralLAST(myParser.CharLiteralLASTContext ctx) {
-        return "char";
+        return ctx.CHARLITERAL().getText();
     }
 
     @Override
@@ -742,14 +655,8 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitArrayAllocationExpressionAST(myParser.ArrayAllocationExpressionASTContext ctx) {
-        //En caso de dar problemas, hay que agregar un [] al final de este string.
-
-        String tipoSimpleAsignacion = (String) this.visit(ctx.simpleType());
-        String tipoExpression = (String) this.visit(ctx.expression());
-        if (!tipoExpression.equals("int")) {
-            throw new RuntimeException("La dimension del arreglo debe ser un int pero se obtuvo => " + tipoExpression + " <=");
-        }
-        return tipoSimpleAsignacion;
+        Object valorExpression = this.visit(ctx.expression());
+        return valorExpression;
     }
 
     @Override

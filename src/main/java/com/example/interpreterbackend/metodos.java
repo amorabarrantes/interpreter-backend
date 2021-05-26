@@ -1,5 +1,6 @@
 package com.example.interpreterbackend;
 
+import Interpreter.interpreterVisit;
 import contextAnalysis.AnalisisContextual;
 import contextAnalysis.claseTablas;
 import contextAnalysis.identificationTable;
@@ -7,12 +8,9 @@ import generated.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-import javax.swing.*;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class metodos {
 
@@ -47,9 +45,9 @@ public class metodos {
             ac.visit(tree);
             String errores = ac.varErrores;
 
-            if(errores.equals("")){
+            if (errores.equals("")) {
                 return ("Compilado correctamente");
-            }else{
+            } else {
                 ac.varErrores = "";
                 return errores;
             }
@@ -83,9 +81,9 @@ public class metodos {
             ac.visit(tree);
             String errores = ac.varErrores;
 
-            if(errores.equals("")){
+            if (errores.equals("")) {
                 return ("Compilado correctamente");
-            }else{
+            } else {
                 ac.varErrores = "";
                 return errores;
             }
@@ -117,20 +115,36 @@ public class metodos {
         parser.addErrorListener(ErrorCatcher.INSTANCE);
         tree = parser.program();
 
-        AnalisisContextual ac = new AnalisisContextual();
-        ac.visit(tree);
 
+        /*
+        HashMap<String, java.io.Serializable> hash_map = new HashMap<String, java.io.Serializable>();
+        // Mapping string values to int keys
+        hash_map.put("x", true);
+        hash_map.put("hola",1);
+        hash_map.put("hola2","hola");
+
+        // Displaying the HashMap
+        System.out.println("Initial Mappings are: " + hash_map);
+        */
 
         if (ErrorCatcher.INSTANCE.stringErrores.equals("")) {
-            System.out.println("Compilación Exitosa sin errores");
+            System.out.println("CODIGO SIN ERRORES SINTAXIS");
+
+            AnalisisContextual ac = new AnalisisContextual();
+            ac.visit(tree);
+
+            if (ac.varErrores.equals("")) {
+                interpreterVisit iv = new interpreterVisit();
+                iv.visit(tree);
+            } else {
+                System.out.println(ac.varErrores + "     *** AC");
+            }
+
+
         } else {
             String mensaje = ErrorCatcher.INSTANCE.stringErrores;
             ErrorCatcher.INSTANCE.stringErrores = "";
             System.out.println(mensaje);
         }
-
-        claseTablas ct = claseTablas.getIsntance();
-
-        ct.tablaFunciones.imprimirNodoFuncion();
     }
 }

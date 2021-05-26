@@ -1,5 +1,8 @@
 package contextAnalysis;
 
+import Interpreter.nodoValor;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 
 public class identificationTable<generico extends nodo> {
@@ -103,6 +106,25 @@ public class identificationTable<generico extends nodo> {
             }
         }
         System.out.println("\n----- FIN TABLA FUNCIONES------");
+    }
+
+    public void imprimirNodoValores() {
+        System.out.println("----- INICIO TABLA VALORES ------");
+        for (generico obj : ll) {
+            if (((nodoValor) obj).type.equals("int[]")) {
+                System.out.println("Nombre: " + obj.tok.getText() + " - " + obj.nivel + " - " + ((nodoValor) obj).type + " - " + Arrays.toString((int[]) ((nodoValor) obj).valor));
+            } else if (((nodoValor) obj).type.equals("char[]")) {
+                System.out.println("Nombre: " + obj.tok.getText() + " - " + obj.nivel + " - " + ((nodoValor) obj).type + " - " + Arrays.toString((char[]) ((nodoValor) obj).valor));
+            } else if (((nodoValor) obj).type.equals("string[]")) {
+                System.out.println("Nombre: " + obj.tok.getText() + " - " + obj.nivel + " - " + ((nodoValor) obj).type + " - " + Arrays.toString((String[]) ((nodoValor) obj).valor));
+            } else if (((nodoValor) obj).type.equals("boolean[]")) {
+                System.out.println("Nombre: " + obj.tok.getText() + " - " + obj.nivel + " - " + ((nodoValor) obj).type + " - " + Arrays.toString((boolean[]) ((nodoValor) obj).valor));
+            } else {
+                System.out.println("Nombre: " + obj.tok.getText() + " - " + obj.nivel + " - " + ((nodoValor) obj).type + " - " + ((nodoValor) obj).valor);
+
+            }
+        }
+        System.out.println("----- FIN TABLA VALORES------");
     }
 
     public String retornarStringTablaVariable() {
