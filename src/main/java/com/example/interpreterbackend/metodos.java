@@ -1,15 +1,15 @@
 package com.example.interpreterbackend;
 
 import Interpreter.interpreterVisit;
+import Interpreter.nodoValorClase;
+import Interpreter.nodoValorVariable;
 import contextAnalysis.AnalisisContextual;
-import contextAnalysis.claseTablas;
 import contextAnalysis.identificationTable;
 import generated.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 public class metodos {
@@ -95,6 +95,8 @@ public class metodos {
     }
 
     public static void main(String[] args) throws IOException {
+        claseTablas ct = claseTablas.getIsntance();
+
         myScanner inst = null;
         myParser parser = null;
         ParseTree tree = null;
@@ -136,6 +138,18 @@ public class metodos {
             if (ac.varErrores.equals("")) {
                 interpreterVisit iv = new interpreterVisit();
                 iv.visit(tree);
+
+
+                nodoValorClase hola = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("hola").valor;
+                System.out.println(hola.atributos.get(0).valor);
+
+                nodoValorClase adios = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("adios").valor;
+                System.out.println(adios.atributos.get(0).valor);
+
+                nodoValorClase adios2 = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("adios2").valor;
+                System.out.println(adios2.atributos.get(0).valor);
+
+
             } else {
                 System.out.println(ac.varErrores + "     *** AC");
             }

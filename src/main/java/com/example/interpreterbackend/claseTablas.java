@@ -1,6 +1,13 @@
-package contextAnalysis;
+package com.example.interpreterbackend;
 
-import Interpreter.nodoValor;
+import Interpreter.nodoValorClase;
+import Interpreter.nodoValorVariable;
+import Interpreter.valuesTable;
+import contextAnalysis.identificationTable;
+import contextAnalysis.nodoClase;
+import contextAnalysis.nodoFuncion;
+import contextAnalysis.nodoVariable;
+
 import java.util.LinkedList;
 
 public class claseTablas {
@@ -15,12 +22,19 @@ public class claseTablas {
     public identificationTable<nodoVariable> tablaVarDeclaration;
     public identificationTable<nodoClase> tablaClassDeclaration;
     public identificationTable<nodoFuncion> tablaFunciones;
-    public identificationTable<nodoValor> tablaValores;
+
+    //De aqui en adelante es para asignaciones.
+    public valuesTable<nodoValorVariable> tablaNodoValorVariable;
+    public valuesTable<nodoValorClase> tablaNodoValorClase;
+
 
     public claseTablas() {
         this.tablaVarDeclaration = new identificationTable<>(new LinkedList<>(), 0);
         this.tablaClassDeclaration = new identificationTable<>(new LinkedList<>(), 0);
         this.tablaFunciones = new identificationTable<>(new LinkedList<>(), 0);
-        this.tablaValores = new identificationTable<>(new LinkedList<>(),0);
+
+        //De aqui en adelante es para asignaciones.
+        this.tablaNodoValorVariable = new valuesTable<>(new LinkedList<>(),0);
+        this.tablaNodoValorClase = new valuesTable<>(new LinkedList<>(),0);
     }
 }

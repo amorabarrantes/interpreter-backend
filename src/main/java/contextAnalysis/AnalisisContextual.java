@@ -1,12 +1,12 @@
 package contextAnalysis;
 
+import com.example.interpreterbackend.claseTablas;
 import generated.myParser;
 import generated.myParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 
 public class AnalisisContextual extends myParserBaseVisitor<Object> {

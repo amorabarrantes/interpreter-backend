@@ -1,5 +1,4 @@
 package com.example.interpreterbackend;
-import contextAnalysis.claseTablas;
 import contextAnalysis.identificationTable;
 import org.apache.catalina.connector.Connector;
 import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;

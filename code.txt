@@ -1,5 +1,15 @@
-int peruano = 5;
-
 class peruano{
-    int x = 1;
+    int x;
 };
+
+peruano hola = new peruano();
+
+hola.x = 5;
+
+peruano adios = new peruano();
+
+adios.x = 3;
+
+peruano adios2 = new peruano();
+
+adios2.x = 100;
