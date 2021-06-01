@@ -6,6 +6,7 @@ import generated.myParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.ParserRuleContext;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 
@@ -256,7 +257,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         if (ctx.expression() != null) {    //En este if hay que comprobar que la asignacion sea compatible con el tipo.
             String tipoAsignacion = (String) this.visit(ctx.expression());
 
-            if(!tipoAsignacion.equals(type)){
+            if (!tipoAsignacion.equals(type)) {
                 throw new RuntimeException(ctx.IDENTIFIER().getText() + " espera => " + type + " pero recibió => " + tipoAsignacion);
             }
         }
@@ -327,6 +328,11 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitStringSimpleTAST(myParser.StringSimpleTASTContext ctx) {
         return "string";
+    }
+
+    @Override
+    public Object visitRealSimpleTAST(myParser.RealSimpleTASTContext ctx) {
+        return "real";
     }
 
     @Override
@@ -486,11 +492,11 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                     tipoTermino = tipoTerminoAuxiliar;
 
                     //A este else if entra solo si se va a hacer una concatenacion de strings.
-                } else if (tipoTermino.equals("int") && tipoAdditive.equals("minus") && tipoTerminoAuxiliar.equals("int")) {
+                } else if ((tipoTermino.equals("int") || tipoTermino.equals("real")) && tipoAdditive.equals("minus") && (tipoTerminoAuxiliar.equals("int") || tipoTerminoAuxiliar.equals("real"))) {
                     tipoTermino = tipoTerminoAuxiliar;
                     bandera = 1;
 
-                } else if (tipoTermino.equals("int") && tipoAdditive.equals("mas") && tipoTerminoAuxiliar.equals("int")) {
+                } else if ((tipoTermino.equals("int") || tipoTermino.equals("real")) && tipoAdditive.equals("mas") && (tipoTerminoAuxiliar.equals("int") || tipoTerminoAuxiliar.equals("real"))) {
                     if (concatenacion)
                         bandera = 2;
                     else
@@ -504,30 +510,39 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                             " <= cuando hay un => " + ctx.additiveOp(i - 1).getText() + " <= en medio");
                 }
             }
-            switch (bandera) {
-                case 0:
-                    return tipoTermino;
-                case 1:
-                case 3:
-                    return "int";
-                case 2:
-                    return "string";
-                default:
-                    return "null";
+
+            ArrayList<String> arreglo = new ArrayList<>();
+
+            for (int i = 0; i < ctx.term().size(); i++) {
+                String tipoTermAux = (String) this.visit(ctx.term(i));
+                arreglo.add(tipoTermAux);
             }
+            if (arreglo.contains("string")) {
+                return "string";
+            } else if (arreglo.contains("boolean")) {
+                return "boolean";
+            } else if (arreglo.contains("real")) {
+                return "real";
+            } else {
+                return "int";
+            }
+
         }
     }
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
         String tipoFactor = (String) this.visit(ctx.factor(0));
+
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
                 String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
                 String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
 
-                if ((tipoFactor.equals("int") && (tipoMultiplicative.equals("mul") || tipoMultiplicative.equals("div")) && tipoFactorAuxiliar.equals("int"))
-                        || tipoFactor.equals("boolean") && tipoMultiplicative.equals("and") && tipoFactorAuxiliar.equals("boolean")) {
+                if ((tipoFactor.equals("int") || tipoFactor.equals("real")) && (tipoMultiplicative.equals("mul") || tipoMultiplicative.equals("div")) && (tipoFactorAuxiliar.equals("int") || tipoFactorAuxiliar.equals("real"))) {
+                    tipoFactor = tipoFactorAuxiliar;
+
+                } else if (tipoFactor.equals("boolean") && tipoMultiplicative.equals("and") && tipoFactorAuxiliar.equals("boolean")) {
                     tipoFactor = tipoFactorAuxiliar;
                 } else {
                     throw new RuntimeException("=> " + tipoFactor + " <= no se puede relacionar con => " + tipoFactorAuxiliar +
@@ -535,7 +550,23 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                 }
             }
         }
-        return tipoFactor;
+
+        ArrayList<String> arreglo = new ArrayList<>();
+
+        for (int i = 0; i < ctx.factor().size(); i++) {
+            String tipoFactorAux = (String) this.visit(ctx.factor(i));
+            arreglo.add(tipoFactorAux);
+        }
+
+        if(arreglo.contains("string")){
+            return "string";
+        } else if (arreglo.contains("boolean")) {
+            return "boolean";
+        } else if (arreglo.contains("real")) {
+            return "real";
+        } else {
+            return "int";
+        }
     }
 
     @Override
@@ -713,7 +744,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitRealLiteralLAST(myParser.RealLiteralLASTContext ctx) {
-        return "int";
+        return "real";
     }
 
     @Override
@@ -812,4 +843,6 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             throw new RuntimeException("=> " + ctx.IDENTIFIER().getText() + " <= no es una variable declarada");
         }
     }
+
+
 }

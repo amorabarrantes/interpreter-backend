@@ -32,7 +32,8 @@ type:   simpleType                                                              
 simpleType: BOOLEAN                                                                         #booleanSimpleTAST
             |CHAR                                                                           #charSimpleTAST
             |INT                                                                            #intSimpleTAST
-            |STRING                                                                         #stringSimpleTAST;
+            |STRING                                                                         #stringSimpleTAST
+            |REAL                                                                           #realSimpleTAST;
 arrayType: simpleType SQUAREPLEFT SQUAREPRIGHT                                              #arrayTypeAST;
 assignment: IDENTIFIER (DOT IDENTIFIER)? ASSIGN expression                                  #assignAST;
 arrayAssignment: IDENTIFIER SQUAREPLEFT expression SQUAREPRIGHT ASSIGN expression           #arrayAssignAST;

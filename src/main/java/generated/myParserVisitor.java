@@ -214,6 +214,13 @@ public interface myParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStringSimpleTAST(myParser.StringSimpleTASTContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code realSimpleTAST}
+	 * labeled alternative in {@link myParser#simpleType}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRealSimpleTAST(myParser.RealSimpleTASTContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code arrayTypeAST}
 	 * labeled alternative in {@link myParser#arrayType}.
 	 * @param ctx the parse tree

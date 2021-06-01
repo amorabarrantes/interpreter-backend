@@ -247,6 +247,8 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                 case "boolean":
                     return false;
                 case "string":
+                case "real":
+                    return 0.0;
                 default:
                     return "";
             }
@@ -263,7 +265,13 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
             switch (type) {
                 case "int":
                     String auxInt = valorExpression.toString();
-                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Integer.parseInt(auxInt)));
+                    String[] auxInt2 = auxInt.split("\\.");
+                    String auxInt3 = auxInt2[0];
+                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Integer.parseInt(auxInt3)));
+                    break;
+                case "real":
+                    String floatAux = valorExpression.toString();
+                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Double.parseDouble(floatAux)));
                     break;
                 case "string":
                     String subString = ((String) valorExpression).replace("\"", "");
@@ -277,7 +285,6 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                     String subChar = ((String) valorExpression).replace("'", "");
                     ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, subChar.charAt(0)));
                     break;
-
                 case "int[]":
                     ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, new int[Integer.parseInt((String) valorExpression)]));
                     break;
@@ -337,6 +344,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     @Override
     public Object visitStringSimpleTAST(myParser.StringSimpleTASTContext ctx) {
         return "string";
+    }
+
+    @Override
+    public Object visitRealSimpleTAST(myParser.RealSimpleTASTContext ctx) {
+        return "real";
     }
 
     @Override
@@ -472,11 +484,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
                 switch (tipoAdditive) {
                     case "mas":
-                        int tipoTerminoAux = Integer.parseInt(tipoTermino.toString()) + Integer.parseInt(tipoTerminoAuxiliar);
+                        Double tipoTerminoAux = Double.parseDouble(tipoTermino.toString()) + Integer.parseInt(tipoTerminoAuxiliar);
                         tipoTermino = tipoTerminoAux;
                         break;
                     case "minus":
-                        int tipoTerminoAux2 = Integer.parseInt(tipoTermino.toString()) - Integer.parseInt(tipoTerminoAuxiliar);
+                        Double tipoTerminoAux2 = Double.parseDouble(tipoTermino.toString()) - Integer.parseInt(tipoTerminoAuxiliar);
                         tipoTermino = tipoTerminoAux2;
                         break;
                     case "or":
@@ -494,8 +506,8 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
-
         Object tipoFactor = this.visit(ctx.factor(0));
+
 
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
@@ -504,11 +516,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
                 switch (tipoMultiplicative) {
                     case "mul":
-                        int tipoFactorAux = Integer.parseInt(tipoFactor.toString()) * Integer.parseInt(tipoFactorAuxiliar);
+                        Double tipoFactorAux = Double.parseDouble(tipoFactor.toString()) * Integer.parseInt(tipoFactorAuxiliar);
                         tipoFactor = tipoFactorAux;
                         break;
                     case "div":
-                        int tipoFactorAux2 = Integer.parseInt(tipoFactor.toString()) / Integer.parseInt(tipoFactorAuxiliar);
+                        Double tipoFactorAux2 = Double.parseDouble(tipoFactor.toString()) / Integer.parseInt(tipoFactorAuxiliar);
                         tipoFactor = tipoFactorAux2;
                         break;
                     case "and":
