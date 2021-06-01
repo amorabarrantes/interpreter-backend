@@ -258,7 +258,6 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         String type = (String) this.visit(ctx.type());
 
         if (ctx.expression() != null) {
-
             Object valorExpression = this.visit(ctx.expression());
 
             switch (type) {
@@ -467,26 +466,58 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
             return tipoTermino;
         } else {
 
-            String additiveAux = (String) this.visit(ctx.additiveOp(0));
-            String termAux = (String) this.visit(ctx.term(1));
-
             for (int i = 1; i < ctx.term().size(); i++) {
                 String tipoAdditive = (String) this.visit(ctx.additiveOp(i - 1));
                 String tipoTerminoAuxiliar = (String) this.visit(ctx.term(i));
+
+                switch (tipoAdditive) {
+                    case "mas":
+                        int tipoTerminoAux = Integer.parseInt(tipoTermino.toString()) + Integer.parseInt(tipoTerminoAuxiliar);
+                        tipoTermino = tipoTerminoAux;
+                        break;
+                    case "minus":
+                        int tipoTerminoAux2 = Integer.parseInt(tipoTermino.toString()) - Integer.parseInt(tipoTerminoAuxiliar);
+                        tipoTermino = tipoTerminoAux2;
+                        break;
+                    case "or":
+                        tipoTerminoAuxiliar = "false";
+                        if (Boolean.parseBoolean(tipoTermino.toString()) || Boolean.parseBoolean(tipoTerminoAuxiliar)) {
+                            tipoTermino = "true";
+                        }
+                        break;
+                }
             }
-            return null;
+            return tipoTermino;
         }
 
     }
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
+
         Object tipoFactor = this.visit(ctx.factor(0));
 
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
                 String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
                 String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
+
+                switch (tipoMultiplicative) {
+                    case "mul":
+                        int tipoFactorAux = Integer.parseInt(tipoFactor.toString()) * Integer.parseInt(tipoFactorAuxiliar);
+                        tipoFactor = tipoFactorAux;
+                        break;
+                    case "div":
+                        int tipoFactorAux2 = Integer.parseInt(tipoFactor.toString()) / Integer.parseInt(tipoFactorAuxiliar);
+                        tipoFactor = tipoFactorAux2;
+                        break;
+                    case "and":
+                        tipoFactor = "false";
+                        if (Boolean.parseBoolean(tipoFactor.toString()) && Boolean.parseBoolean(tipoFactorAuxiliar)) {
+                            tipoFactor = "true";
+                        }
+                        break;
+                }
             }
         }
         return tipoFactor;
