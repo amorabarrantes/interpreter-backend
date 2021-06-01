@@ -12,6 +12,9 @@ import org.antlr.v4.runtime.tree.*;
 import java.io.IOException;
 import java.util.LinkedList;
 
+
+
+
 public class metodos {
 
     public static final metodos INSTANCE = new metodos();
@@ -139,7 +142,7 @@ public class metodos {
                 interpreterVisit iv = new interpreterVisit();
                 iv.visit(tree);
 
-
+/*
                 nodoValorClase hola = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("hola").valor;
                 System.out.println(hola.atributos.get(0).valor);
 
@@ -148,6 +151,8 @@ public class metodos {
 
                 nodoValorClase adios2 = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("adios2").valor;
                 System.out.println(adios2.atributos.get(0).valor);
+*/
+
 
 
             } else {

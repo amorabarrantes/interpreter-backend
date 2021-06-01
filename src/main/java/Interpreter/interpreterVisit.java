@@ -16,7 +16,7 @@ import java.util.Objects;
 public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     claseTablas ct = claseTablas.getIsntance();
-    public String varErrores;
+    public String varErroresInterprete;
 
 
     @Override
@@ -26,8 +26,8 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                 this.visit(statement);
             return null;
         } catch (RuntimeException e) {
-            varErrores = e.getMessage();
-            System.out.println(varErrores);
+            varErroresInterprete = e.getMessage();
+            System.out.println(varErroresInterprete);
             return null;
         }
     }
@@ -258,19 +258,21 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         String type = (String) this.visit(ctx.type());
 
         if (ctx.expression() != null) {
-            Object valorExpression = this.visit(ctx.expression());
 
+            Object valorExpression = this.visit(ctx.expression());
 
             switch (type) {
                 case "int":
-                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Integer.parseInt((String) valorExpression)));
+                    String auxInt = valorExpression.toString();
+                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Integer.parseInt(auxInt)));
                     break;
                 case "string":
                     String subString = ((String) valorExpression).replace("\"", "");
                     ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, subString));
                     break;
                 case "boolean":
-                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Boolean.parseBoolean((String) valorExpression)));
+                    String auxBoolean = valorExpression.toString();
+                    ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, Boolean.parseBoolean(auxBoolean)));
                     break;
                 case "char":
                     String subChar = ((String) valorExpression).replace("'", "");
@@ -370,7 +372,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         } else {
 
             nodoValorVariable variable = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER(0).getText());
-            nodoValorVariable atributo = ((nodoValorClase)variable.valor).buscarVariableClase(ctx.IDENTIFIER(1).getText());
+            nodoValorVariable atributo = ((nodoValorClase) variable.valor).buscarVariableClase(ctx.IDENTIFIER(1).getText());
             String valorExpression = (String) this.visit(ctx.expression());
 
 
@@ -394,22 +396,52 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitArrayAssignAST(myParser.ArrayAssignASTContext ctx) {
-        String tipoExpression1 = (String) this.visit(ctx.expression(0));
-        if (tipoExpression1.equals("int")) {
-            String tipoExpression2 = (String) this.visit(ctx.expression(1));
-            nodoVariable busqueda = ct.tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
-            if (busqueda != null) {
-                if (busqueda.type.equals(tipoExpression2)) {
-                    return tipoExpression2;
+        int indice = Integer.parseInt((String) this.visit(ctx.expression(0)));
+
+        String valorAsignacion = this.visit(ctx.expression(1)).toString();
+
+        nodoValorVariable varArray = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER().getText());
+        String type = varArray.type;
+
+
+        switch (type) {
+            case "int[]":
+                int[] var = ((int[]) varArray.valor);
+                if (indice >= var.length) {
+                    throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
                 } else {
-                    throw new RuntimeException(ctx.IDENTIFIER().getText() + " espera => " + busqueda.type + " pero recibió => " + tipoExpression2);
+                    ((int[]) varArray.valor)[indice] = Integer.parseInt(valorAsignacion);
+                    break;
                 }
-            } else {
-                throw new RuntimeException(ctx.IDENTIFIER().getText() + " <= no esta declarado como variable.");
-            }
-        } else {
-            throw new RuntimeException("El subIndice de un arreglo, debe ser int, pero recibio => " + tipoExpression1);
+            case "boolean[]":
+                int[] var2 = ((int[]) varArray.valor);
+                if (indice >= var2.length) {
+                    throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
+                } else {
+                    ((boolean[]) varArray.valor)[indice] = Boolean.parseBoolean(valorAsignacion);
+                    break;
+                }
+            case "string[]":
+                int[] var3 = ((int[]) varArray.valor);
+
+                if (indice >= var3.length) {
+                    throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
+                } else {
+                    ((String[]) varArray.valor)[indice] = valorAsignacion;
+                    break;
+                }
+            case "char[]":
+                int[] var4 = ((int[]) varArray.valor);
+                if (indice >= var4.length) {
+                    throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
+                } else {
+                    ((char[]) varArray.valor)[indice] = valorAsignacion.charAt(0);
+                    break;
+                }
         }
+        ct.tablaNodoValorVariable.imprimirNodoValorVariables();
+        return null;
+
     }
 
     @Override
@@ -470,27 +502,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     public Object visitIdFAST(myParser.IdFASTContext ctx) {
         //Asignacion de una variable ya declarada.
         if (ctx.IDENTIFIER().size() == 1) {
-            nodoVariable nodo = ct.tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().get(0).getText());
-            if (nodo != null) {
-                return nodo.type;
-            } else {
-                throw new RuntimeException(ctx.IDENTIFIER().get(0).getText() + " no es una variable existente");
-            }
-        } else { //Asignacion de una variable de tipo clase.
-            nodoVariable variable = ct.tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().get(0).getText());
-
-            if (variable != null) {
-                nodoClase clase = ct.tablaClassDeclaration.retrieveNode(variable.type);
-                nodoVariable variableClase = clase.buscarVariableClase(ctx.IDENTIFIER().get(1).getText());
-
-                if (variableClase != null) {
-                    return variableClase.type;
-                } else {
-                    throw new RuntimeException("La clase => " + ctx.IDENTIFIER().get(0).getText() + " <= no tiene el atributo => " + ctx.IDENTIFIER().get(1).getText() + " <=");
-                }
-            } else {
-                throw new RuntimeException("La variable => " + ctx.IDENTIFIER().get(0).getText() + " <= no existe");
-            }
+            return ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER(0).getText()).valor;
+        } else {//Asignacion de una variable de tipo clase.
+            nodoValorClase clase = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER(0).getText()).valor;
+            nodoValorVariable atributo = clase.buscarVariableClase(ctx.IDENTIFIER(1).getText());
+            return atributo.valor;
         }
     }
 
@@ -502,19 +518,19 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitArrayLookUpFAST(myParser.ArrayLookUpFASTContext ctx) {
-        String tipoArreglo = (String) this.visit(ctx.arrayLookup());
+        Object tipoArreglo = this.visit(ctx.arrayLookup());
         return tipoArreglo;
     }
 
     @Override
     public Object visitArrayLengthFAST(myParser.ArrayLengthFASTContext ctx) {
-        String tipoArrayLength = (String) this.visit(ctx.arrayLength());
-        return tipoArrayLength;
+        Object valorArrayLength = this.visit(ctx.arrayLength());
+        return valorArrayLength;
     }
 
     @Override
     public Object visitSubExpressionFAST(myParser.SubExpressionFASTContext ctx) {
-        String tipoSubExpression = (String) this.visit(ctx.subExpression());
+        Object tipoSubExpression = this.visit(ctx.subExpression());
         return tipoSubExpression;
     }
 
@@ -532,7 +548,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitUnaryFAST(myParser.UnaryFASTContext ctx) {
-        String tipoUnary = (String) this.visit(ctx.unary());
+        Object tipoUnary = this.visit(ctx.unary());
         return tipoUnary;
     }
 
@@ -608,23 +624,17 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitUnaryAST(myParser.UnaryASTContext ctx) {
-
-        if (ctx.MAS() != null || ctx.MINUS() != null) {
-            for (myParser.ExpressionContext expression : ctx.expression()) {
-                String tipoExpression = (String) this.visit(expression);
-                if (!tipoExpression.equals("int")) {
-                    throw new RuntimeException(tipoExpression + " <= fue encontrado y se requiere un entero");
-                }
-            }
-            return "int";
+        if (ctx.MAS() != null) {
+            String valorExpression = (String) this.visit(ctx.expression(0));
+            return valorExpression;
+        } else if (ctx.MINUS() != null) {
+            int valorExpressionAux = Integer.parseInt(this.visit(ctx.expression(0)).toString());
+            String valorExpression = Integer.toString(valorExpressionAux * -1);
+            return valorExpression;
         } else {
-            for (myParser.ExpressionContext expression : ctx.expression()) {
-                String tipoExpression = (String) this.visit(expression);
-                if (!tipoExpression.equals("boolean")) {
-                    throw new RuntimeException(tipoExpression + " <= fue encontrado y se requiere un boolean");
-                }
-            }
-            return "boolean";
+            Boolean valorExpressionAux = Boolean.parseBoolean(this.visit(ctx.expression(0)).toString());
+            String valorExpression = Boolean.toString(!valorExpressionAux);
+            return valorExpression;
         }
     }
 
@@ -655,11 +665,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitAllocationExpressionAST(myParser.AllocationExpressionASTContext ctx){
+    public Object visitAllocationExpressionAST(myParser.AllocationExpressionASTContext ctx) {
         nodoValorClase clase = ct.tablaNodoValorClase.retrieveNode(ctx.IDENTIFIER().getText());
 
         ArrayList<nodoValorVariable> arrayAux = new ArrayList<>();
-        for (nodoValorVariable obj: clase.atributos) {
+        for (nodoValorVariable obj : clase.atributos) {
             arrayAux.add(new nodoValorVariable(obj.identifier, obj.nivel, obj.type, obj.valor));
         }
 
@@ -675,8 +685,8 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitSubExpressionAST(myParser.SubExpressionASTContext ctx) {
-        String tipo = (String) this.visit(ctx.expression());
-        return tipo;
+        Object valor = this.visit(ctx.expression());
+        return valor;
     }
 
     @Override
@@ -715,22 +725,38 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitArrayLookupAST(myParser.ArrayLookupASTContext ctx) {
-        nodoVariable tipoAsignacion = ct.tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
-        if (tipoAsignacion != null) {
-            this.visit(ctx.expression());
-            return tipoAsignacion.type;
-        } else {
-            throw new RuntimeException("=> " + ctx.IDENTIFIER().getText() + " <= no es una variable definida.");
+        nodoValorVariable varArray = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER().getText());
+        int indice = Integer.parseInt((String) this.visit(ctx.expression()));
+        String type = varArray.type;
+
+        switch (type) {
+            case "int[]":
+                return ((int[]) varArray.valor)[indice];
+            case "boolean[]":
+                return ((boolean[]) varArray.valor)[indice];
+            case "string[]":
+                return ((String[]) varArray.valor)[indice];
+            default:
+                return ((char[]) varArray.valor)[indice];
+
         }
     }
 
     @Override
     public Object visitArrayLengthAST(myParser.ArrayLengthASTContext ctx) {
-        nodoVariable variable = ct.tablaVarDeclaration.retrieveNode(ctx.IDENTIFIER().getText());
-        if (variable != null) {
-            return "int";
-        } else {
-            throw new RuntimeException("=> " + ctx.IDENTIFIER().getText() + " <= no es una variable declarada");
+        nodoValorVariable varArray = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER().getText());
+        String type = varArray.type;
+
+        switch (type) {
+            case "int[]":
+                return ((int[]) varArray.valor).length;
+            case "boolean[]":
+                return ((boolean[]) varArray.valor).length;
+            case "string[]":
+                return ((String[]) varArray.valor).length;
+            default:
+                return ((char[]) varArray.valor).length;
+
         }
     }
 }
