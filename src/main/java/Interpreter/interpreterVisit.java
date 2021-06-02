@@ -516,11 +516,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
                 switch (tipoMultiplicative) {
                     case "mul":
-                        Double tipoFactorAux = Double.parseDouble(tipoFactor.toString()) * Integer.parseInt(tipoFactorAuxiliar);
+                        Double tipoFactorAux = Double.parseDouble(tipoFactor.toString()) * Double.parseDouble(tipoFactorAuxiliar);
                         tipoFactor = tipoFactorAux;
                         break;
                     case "div":
-                        Double tipoFactorAux2 = Double.parseDouble(tipoFactor.toString()) / Integer.parseInt(tipoFactorAuxiliar);
+                        Double tipoFactorAux2 = Double.parseDouble(tipoFactor.toString()) / Double.parseDouble(tipoFactorAuxiliar);
                         tipoFactor = tipoFactorAux2;
                         break;
                     case "and":
