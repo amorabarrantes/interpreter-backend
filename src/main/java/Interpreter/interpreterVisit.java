@@ -17,6 +17,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     claseTablas ct = claseTablas.getIsntance();
     public String varErroresInterprete;
+    public String printMessage = "";
 
 
     @Override
@@ -211,7 +212,8 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitPrintAST(myParser.PrintASTContext ctx) {
-        this.visit(ctx.expression());
+        printMessage += this.visit(ctx.expression()).toString() + "\n";
+        System.out.println(printMessage);
         return null;
     }
 
@@ -231,7 +233,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
             }
         }
 
-        ct.tablaNodoValorClase.imprimirNodoValorClase();
+        //ct.tablaNodoValorClase.imprimirNodoValorClase();
         return null;
     }
 
@@ -304,7 +306,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         } else {
             ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, null));
         }
-        ct.tablaNodoValorVariable.imprimirNodoValorVariables();
+        //ct.tablaNodoValorVariable.imprimirNodoValorVariables();
         return null;
     }
 
@@ -360,24 +362,31 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     @Override
     public Object visitAssignAST(myParser.AssignASTContext ctx) {
         if (ctx.IDENTIFIER().size() == 1) {
-            String valorExpression = (String) this.visit(ctx.expression());
+            Object valorExpression = this.visit(ctx.expression());
             nodoValorVariable variable = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER(0).getText());
 
             String type = variable.type;
             switch (type) {
                 case "int":
-                    variable.valor = Integer.parseInt(valorExpression);
+                    String auxInt = valorExpression.toString();
+                    String[] auxInt2 = auxInt.split("\\.");
+                    String auxInt3 = auxInt2[0];
+                    variable.valor = Integer.parseInt(auxInt3);
+                    break;
+                case "real":
+                    variable.valor = Double.parseDouble(valorExpression.toString());
                     break;
                 case "string":
-                    variable.valor = valorExpression.replace("\"", "");
+                    variable.valor = valorExpression.toString().replace("\"", "");
                     break;
                 case "boolean":
-                    variable.valor = Boolean.parseBoolean(valorExpression);
+                    variable.valor = Boolean.parseBoolean(valorExpression.toString());
                     break;
                 case "char":
-                    variable.valor = valorExpression.replace("'", "");
+                    variable.valor = valorExpression.toString().replace("'", "");
                     break;
             }
+            //ct.tablaNodoValorVariable.imprimirNodoValorVariables();
             return null;
 
         } else {
@@ -418,7 +427,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         switch (type) {
             case "int[]":
                 int[] var = ((int[]) varArray.valor);
-                if (indice >= var.length) {
+                if (indice >= var.length || indice < 0) {
                     throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
                 } else {
                     ((int[]) varArray.valor)[indice] = Integer.parseInt(valorAsignacion);
@@ -426,7 +435,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                 }
             case "boolean[]":
                 int[] var2 = ((int[]) varArray.valor);
-                if (indice >= var2.length) {
+                if (indice >= var2.length || indice < 0) {
                     throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
                 } else {
                     ((boolean[]) varArray.valor)[indice] = Boolean.parseBoolean(valorAsignacion);
@@ -435,7 +444,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
             case "string[]":
                 int[] var3 = ((int[]) varArray.valor);
 
-                if (indice >= var3.length) {
+                if (indice >= var3.length || indice < 0) {
                     throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
                 } else {
                     ((String[]) varArray.valor)[indice] = valorAsignacion;
@@ -443,14 +452,14 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                 }
             case "char[]":
                 int[] var4 = ((int[]) varArray.valor);
-                if (indice >= var4.length) {
+                if (indice >= var4.length || indice < 0) {
                     throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
                 } else {
                     ((char[]) varArray.valor)[indice] = valorAsignacion.charAt(0);
                     break;
                 }
         }
-        ct.tablaNodoValorVariable.imprimirNodoValorVariables();
+        //ct.tablaNodoValorVariable.imprimirNodoValorVariables();
         return null;
 
     }
@@ -465,8 +474,44 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
             for (int i = 1; i < ctx.simpleExpression().size(); i++) {
                 String tipoRelationOP = (String) this.visit(ctx.relationalOp(i - 1));
                 String tipoSimpleExpressionAuxiliar = (String) this.visit(ctx.simpleExpression(i));
+
+                switch (tipoRelationOP) {
+                    case "equals":
+                        boolean tipoSimpleExpressionAux = tipoSimpleExpression.toString().equals(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux;
+                        break;
+                    case "different":
+                        boolean tipoSimpleExpressionAux2 = !(tipoSimpleExpression.toString().equals(tipoSimpleExpressionAuxiliar.toString()));
+                        tipoSimpleExpression = tipoSimpleExpressionAux2;
+                        break;
+                    case "smaller":
+                        boolean tipoSimpleExpressionAux3 = Double.parseDouble(tipoSimpleExpression.toString()) < Double.parseDouble(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux3;
+                        break;
+                    case "greather":
+                        boolean tipoSimpleExpressionAux4 = Double.parseDouble(tipoSimpleExpression.toString()) > Double.parseDouble(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux4;
+                        break;
+                    case "smallerequal":
+                        boolean tipoSimpleExpressionAux5 = Double.parseDouble(tipoSimpleExpression.toString()) <= Double.parseDouble(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux5;
+                        break;
+                    case "greatherequal":
+                        boolean tipoSimpleExpressionAux6 = Double.parseDouble(tipoSimpleExpression.toString()) >= Double.parseDouble(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux6;
+                        break;
+                    case "orsymbol":
+                        boolean tipoSimpleExpressionAux7 = Boolean.parseBoolean(tipoSimpleExpression.toString()) || Boolean.parseBoolean(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux7;
+                        break;
+                    case "amperton":
+                        boolean tipoSimpleExpressionAux8 = Boolean.parseBoolean(tipoSimpleExpression.toString()) && Boolean.parseBoolean(tipoSimpleExpressionAuxiliar.toString());
+                        tipoSimpleExpression = tipoSimpleExpressionAux8;
+                        break;
+                }
+
             }
-            return null;
+            return tipoSimpleExpression;
         }
     }
 
@@ -474,27 +519,28 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     public Object visitSimpleExpressionAST(myParser.SimpleExpressionASTContext ctx) {
         Object tipoTermino = this.visit(ctx.term(0));
 
+
         if (ctx.term().size() == 1) {
             return tipoTermino;
         } else {
-
             for (int i = 1; i < ctx.term().size(); i++) {
                 String tipoAdditive = (String) this.visit(ctx.additiveOp(i - 1));
-                String tipoTerminoAuxiliar = (String) this.visit(ctx.term(i));
+                Object tipoTerminoAuxiliar = this.visit(ctx.term(i));
 
                 switch (tipoAdditive) {
                     case "mas":
-                        Double tipoTerminoAux = Double.parseDouble(tipoTermino.toString()) + Integer.parseInt(tipoTerminoAuxiliar);
+                        Double tipoTerminoAux = Double.parseDouble(tipoTermino.toString()) + Double.parseDouble(tipoTerminoAuxiliar.toString());
                         tipoTermino = tipoTerminoAux;
                         break;
                     case "minus":
-                        Double tipoTerminoAux2 = Double.parseDouble(tipoTermino.toString()) - Integer.parseInt(tipoTerminoAuxiliar);
+                        Double tipoTerminoAux2 = Double.parseDouble(tipoTermino.toString()) - Double.parseDouble(tipoTerminoAuxiliar.toString());
                         tipoTermino = tipoTerminoAux2;
                         break;
                     case "or":
-                        tipoTerminoAuxiliar = "false";
-                        if (Boolean.parseBoolean(tipoTermino.toString()) || Boolean.parseBoolean(tipoTerminoAuxiliar)) {
+                        if (Boolean.parseBoolean(tipoTermino.toString()) || Boolean.parseBoolean(tipoTerminoAuxiliar.toString())) {
                             tipoTermino = "true";
+                        }else{
+                            tipoTermino = "false";
                         }
                         break;
                 }
@@ -507,7 +553,6 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
         Object tipoFactor = this.visit(ctx.factor(0));
-
 
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
@@ -524,9 +569,10 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                         tipoFactor = tipoFactorAux2;
                         break;
                     case "and":
-                        tipoFactor = "false";
                         if (Boolean.parseBoolean(tipoFactor.toString()) && Boolean.parseBoolean(tipoFactorAuxiliar)) {
                             tipoFactor = "true";
+                        }else{
+                            tipoFactor = "false";
                         }
                         break;
                 }
@@ -771,6 +817,12 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         nodoValorVariable varArray = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER().getText());
         int indice = Integer.parseInt((String) this.visit(ctx.expression()));
         String type = varArray.type;
+
+
+        int[] var = ((int[]) varArray.valor);
+        if (indice >= var.length || indice < 0) {
+            throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
+        }
 
         switch (type) {
             case "int[]":

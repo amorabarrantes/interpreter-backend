@@ -428,7 +428,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
         ArrayList<String> booleanRelationals = new ArrayList<>() {
             {
                 add("orsymbol");
-                add("ampertor");
+                add("amperton");
                 add("equals");
                 add("different");
             }
@@ -444,7 +444,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                 if (tipoSimpleExpression.equals("boolean") && booleanRelationals.contains(tipoRelationOP) && tipoSimpleExpressionAuxiliar.equals("boolean")) {
                     tipoSimpleExpression = tipoSimpleExpressionAuxiliar;
 
-                } else if (tipoSimpleExpression.equals("int") && intRelationals.contains(tipoRelationOP) && tipoSimpleExpressionAuxiliar.equals("int")) {
+                } else if ((tipoSimpleExpression.equals("int") || tipoSimpleExpression.equals("real")) && intRelationals.contains(tipoRelationOP) && (tipoSimpleExpressionAuxiliar.equals("int")) || tipoSimpleExpressionAuxiliar.equals("real")) {
                     tipoSimpleExpression = tipoSimpleExpressionAuxiliar;
 
                 } else if (tipoSimpleExpression.equals(tipoSimpleExpressionAuxiliar) && allRelationals.contains(tipoRelationOP)) {
@@ -461,7 +461,6 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitSimpleExpressionAST(myParser.SimpleExpressionASTContext ctx) {
         String tipoTermino = (String) this.visit(ctx.term(0));
-
         //Retorna 0 cuando es concatenacion de booleanos mediante or.
         //Retorna 1 cuando es una resta de enteros.
         //Retorna 2 cuando es una concatenacion mediante + retornando string
@@ -533,7 +532,6 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
         String tipoFactor = (String) this.visit(ctx.factor(0));
-
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
                 String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
@@ -558,12 +556,14 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             arreglo.add(tipoFactorAux);
         }
 
-        if(arreglo.contains("string")){
+        if (arreglo.contains("string")) {
             return "string";
         } else if (arreglo.contains("boolean")) {
             return "boolean";
         } else if (arreglo.contains("real")) {
             return "real";
+        } else if (arreglo.contains("char")) {
+            return "char";
         } else {
             return "int";
         }
