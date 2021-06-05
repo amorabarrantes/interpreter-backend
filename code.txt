@@ -1,7 +1,4 @@
-int wa;
-
 int hola(int wa){
-    int q = 5;
-    int w =4;
-    return q;
+    wa = 5;
+    return wa;
 }

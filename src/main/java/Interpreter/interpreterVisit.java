@@ -118,9 +118,9 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
         //this.visit(ctx.block());
 
-        ct.tablaNodoValorFuncion.enter(new nodoValorFuncion(ctx.IDENTIFIER().getText(), ct.tablaNodoValorFuncion.nivel, tipoDatoFuncion, ctx.block()));
+        ct.tablaNodoValorFuncion.enter(new nodoValorFuncion(ctx.IDENTIFIER().getText(), ct.tablaNodoValorFuncion.nivel, tipoDatoFuncion, ctx));
 
-        //ct.tablaNodoValorFuncion.impr
+        ct.tablaNodoValorFuncion.imprimirNodoValorFuncion();
         return null;
     }
 
