@@ -1,18 +1,16 @@
 package Interpreter;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
+import generated.myParser;
 
-/*
-public class nodoValorFuncion<T> extends nodoValor {
+public class nodoValorFuncion extends nodoValor {
     public String type;
-    public T valor;
+    public myParser.BlockContext valor;
 
-    public nodoValorFuncion(Token tok, int nivel, ParserRuleContext declCtx, String type, T valor) {
-        super(tok, nivel, declCtx);
+    public nodoValorFuncion(String identifier, int nivel, String type, myParser.BlockContext valor) {
+        super(identifier, nivel);
         this.type = type;
         this.valor = valor;
     }
 }
-*/
+
 

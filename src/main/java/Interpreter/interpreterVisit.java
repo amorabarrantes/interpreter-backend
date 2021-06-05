@@ -95,54 +95,32 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitBlockAST(myParser.BlockASTContext ctx) {
-        ct.tablaFunciones.openScope();
-        ct.tablaVarDeclaration.openScope();
-        ct.tablaClassDeclaration.openScope();
+        //ct.tablaFunciones.openScope();
+        ct.tablaNodoValorVariable.openScope();
+        ct.tablaNodoValorClase.openScope();
 
         for (myParser.StatementContext statement : ctx.statement()) {
             this.visit(statement);
         }
 
-        ct.tablaFunciones.closeScope();
-        ct.tablaVarDeclaration.closeScope();
-        ct.tablaClassDeclaration.closeScope();
+        //ct.tablaFunciones.closeScope();
+        ct.tablaNodoValorVariable.closeScope();
+        ct.tablaNodoValorClase.closeScope();
         return null;
     }
 
     @Override
     public Object visitFunctionDecAST(myParser.FunctionDecASTContext ctx) {
-
-        String type = (String) this.visit(ctx.type());
-
-        //AQUI SE VALIDA QUE NO SE PUEDAN INGRESAR 2 FUNCIONES CON EL MISMO IDENTIFICADOR.
-        if (ct.tablaFunciones.retrieve(ctx.IDENTIFIER().getText()) == null) {
-            ct.tablaFunciones.enter(new nodoFuncion(ctx.IDENTIFIER().getSymbol(), ct.tablaFunciones.nivel, ctx, new ArrayList<>(), type));
-        } else {
-            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => es una funcion ya existente");
-        }
+        String tipoDatoFuncion = (String) this.visit(ctx.type());
 
         if (ctx.formalParams() != null)
             this.visit(ctx.formalParams());
 
-        this.visit(ctx.block());
+        //this.visit(ctx.block());
 
-        boolean flag = false;
-        for (ParseTree child : ctx.children) {
-            if (child instanceof myParser.BlockASTContext) {
-                myParser.BlockASTContext blockChild = (myParser.BlockASTContext) child;
-                for (ParserRuleContext statement : blockChild.statement()) {
-                    if (statement instanceof myParser.ReturnSTASTContext) {
-                        flag = true;
-                        break;
-                    }
-                }
-            }
-        }
+        ct.tablaNodoValorFuncion.enter(new nodoValorFuncion(ctx.IDENTIFIER().getText(), ct.tablaNodoValorFuncion.nivel, tipoDatoFuncion, ctx.block()));
 
-        if (!flag) {
-            ct.tablaFunciones.ll.remove(ct.tablaFunciones.retrieveNode(ctx.IDENTIFIER().getText()));
-            throw new RuntimeException("No se puede declarar una funcion sin return.");
-        }
+        //ct.tablaNodoValorFuncion.impr
         return null;
     }
 
@@ -171,49 +149,37 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitWhileAST(myParser.WhileASTContext ctx) {
-        this.visit(ctx.expression());
-        this.visit(ctx.block());
+        Boolean condicionBoolean = (Boolean) this.visit(ctx.expression());
+        while (condicionBoolean) {
+            this.visit(ctx.block());
+            condicionBoolean = (Boolean) this.visit(ctx.expression());
+        }
         return null;
     }
 
     @Override
     public Object visitIfAST(myParser.IfASTContext ctx) {
-        this.visit(ctx.expression());
-        this.visit(ctx.block(0));
-        if (ctx.block(1) != null) {
-            this.visit(ctx.block(1));
+        Boolean valorExpression = (Boolean) this.visit(ctx.expression());
+
+        if (valorExpression) {
+            this.visit(ctx.block(0));
+        } else {
+            if (ctx.block(1) != null) {
+                this.visit(ctx.block(1));
+            }
         }
         return null;
     }
 
     @Override
     public Object visitReturnAST(myParser.ReturnASTContext ctx) {
-        String tipo = (String) this.visit(ctx.expression());
-
-        if (ct.tablaFunciones.ll.size() != 0) {
-            ParserRuleContext variable = ctx.getParent();
-
-            while (variable != null) {
-                if (variable.getClass().getSimpleName().equals("FunctionDecASTContext")) {
-                    nodoFuncion funcion = ct.tablaFunciones.ll.get(ct.tablaFunciones.ll.size() - 1);
-
-                    if (!funcion.type.equals(tipo)) {
-                        throw new RuntimeException("La funcion => " + funcion.tok.getText() + " <= es de tipo => " + funcion.type + " <= pero retorna => " + tipo + " <=");
-                    }
-                }
-                variable = variable.getParent();
-            }
-        } else {
-            throw new RuntimeException("No se puede retornar fuera de una funcion.");
-        }
-
-        return null;
+        Object retorno = this.visit(ctx.expression());
+        return retorno;
     }
 
     @Override
     public Object visitPrintAST(myParser.PrintASTContext ctx) {
         printMessage += this.visit(ctx.expression()).toString() + "\n";
-        System.out.println(printMessage);
         return null;
     }
 
@@ -539,7 +505,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                     case "or":
                         if (Boolean.parseBoolean(tipoTermino.toString()) || Boolean.parseBoolean(tipoTerminoAuxiliar.toString())) {
                             tipoTermino = "true";
-                        }else{
+                        } else {
                             tipoTermino = "false";
                         }
                         break;
@@ -571,7 +537,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                     case "and":
                         if (Boolean.parseBoolean(tipoFactor.toString()) && Boolean.parseBoolean(tipoFactorAuxiliar)) {
                             tipoFactor = "true";
-                        }else{
+                        } else {
                             tipoFactor = "false";
                         }
                         break;
@@ -782,7 +748,6 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     public Object visitFunctionCallAST(myParser.FunctionCallASTContext ctx) {
         nodoFuncion funcion = ct.tablaFunciones.retrieveNode(ctx.IDENTIFIER().getText());
         if (funcion != null) {
-
             if (ctx.actualParams() != null) {
                 this.visit(ctx.actualParams());
             }
@@ -796,18 +761,10 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     @Override
     public Object visitActualParamsAST(myParser.ActualParamsASTContext ctx) {
         nodoFuncion funcion = ct.tablaFunciones.retrieveNode(((myParser.FunctionCallASTContext) ctx.parent).IDENTIFIER().getText());
+        for (int i = 0; i < ctx.expression().size(); i++) {
+            String tipoParametroFuncion = funcion.parametros.get(i).type;
+            String tipoExpressionArgumento = (String) this.visit(ctx.expression().get(i));
 
-        if (funcion.parametros.size() == ctx.expression().size()) {
-            for (int i = 0; i < ctx.expression().size(); i++) {
-                String tipoParametroFuncion = funcion.parametros.get(i).type;
-                String tipoExpressionArgumento = (String) this.visit(ctx.expression().get(i));
-
-                if (!tipoParametroFuncion.equals(tipoExpressionArgumento)) {
-                    throw new RuntimeException("La funcion => " + funcion.tok.getText() + " <= espera => " + tipoParametroFuncion + " <= y obtuvo => " + tipoExpressionArgumento + " <=");
-                }
-            }
-        } else {
-            throw new RuntimeException("La funcion tiene: " + funcion.parametros.size() + " parametros, pero recibió: " + ctx.expression().size() + " argumentos.");
         }
         return null;
     }

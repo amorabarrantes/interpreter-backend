@@ -1,6 +1,7 @@
 package com.example.interpreterbackend;
 
 import Interpreter.nodoValorClase;
+import Interpreter.nodoValorFuncion;
 import Interpreter.nodoValorVariable;
 import Interpreter.valuesTable;
 import contextAnalysis.identificationTable;
@@ -26,6 +27,8 @@ public class claseTablas {
     //De aqui en adelante es para asignaciones.
     public valuesTable<nodoValorVariable> tablaNodoValorVariable;
     public valuesTable<nodoValorClase> tablaNodoValorClase;
+    public valuesTable<nodoValorFuncion> tablaNodoValorFuncion;
+
 
 
     public claseTablas() {
@@ -36,5 +39,6 @@ public class claseTablas {
         //De aqui en adelante es para asignaciones.
         this.tablaNodoValorVariable = new valuesTable<>(new LinkedList<>(),0);
         this.tablaNodoValorClase = new valuesTable<>(new LinkedList<>(),0);
+        this.tablaNodoValorFuncion = new valuesTable<>(new LinkedList<>(),0);
     }
 }

@@ -9,12 +9,12 @@ statement:          variableDecl PYCOMA                                         
                     |classDeclaration PYCOMA                                                #classDecSTAST
                     |assignment PYCOMA                                                      #assignSTAST
                     |arrayAssignment PYCOMA                                                 #arrayAssignSTAST
-                    |printStatement PYCOMA                                                  #printSTAST //FALTA
-                    |ifStatement                                                            #ifSTAST //FALTA
-                    |whileStatement                                                         #whileSTAST //FALTA
-                    |returnStatement PYCOMA                                                 #returnSTAST //FALTA
+                    |printStatement PYCOMA                                                  #printSTAST
+                    |ifStatement                                                            #ifSTAST
+                    |whileStatement                                                         #whileSTAST
+                    |returnStatement PYCOMA                                                 #returnSTAST
                     |functionDecl                                                           #funcDecSTAST //FALTA
-                    |block                                                                  #blockSTAST; //FALTA
+                    |block                                                                  #blockSTAST; //FALTA FUNCIONES
 block:BRACKETLEFT (statement)* BRACKETRIGHT                                                 #blockAST;
 functionDecl:type IDENTIFIER PLEFT (formalParams)? PRIGHT block                             #functionDecAST;
 formalParams:formalParam (COMMA formalParam)*                                               #formalParamsAST;

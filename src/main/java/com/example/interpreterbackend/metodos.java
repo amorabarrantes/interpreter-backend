@@ -142,6 +142,8 @@ public class metodos {
                 interpreterVisit iv = new interpreterVisit();
                 iv.visit(tree);
 
+                System.out.println(iv.printMessage);
+
 /*
                 nodoValorClase hola = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("hola").valor;
                 System.out.println(hola.atributos.get(0).valor);

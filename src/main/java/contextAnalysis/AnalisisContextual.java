@@ -131,6 +131,9 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
                 myParser.BlockASTContext blockChild = (myParser.BlockASTContext) child;
                 for (ParserRuleContext statement : blockChild.statement()) {
                     if (statement instanceof myParser.ReturnSTASTContext) {
+                        if(!statement.equals(blockChild.statement().get(blockChild.statement().size()-1))){
+                            throw new RuntimeException("el return debe estar al final");
+                        }
                         flag = true;
                         break;
                     }
@@ -170,14 +173,20 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitWhileAST(myParser.WhileASTContext ctx) {
-        this.visit(ctx.expression());
+        String type = (String) this.visit(ctx.expression());
+        if(!type.equals("boolean")){
+            throw new RuntimeException("La condicion del while requiere boolean, y se encontro => " + type + " <=");
+        }
         this.visit(ctx.block());
         return null;
     }
 
     @Override
     public Object visitIfAST(myParser.IfASTContext ctx) {
-        this.visit(ctx.expression());
+        String type = (String) this.visit(ctx.expression());
+        if(!type.equals("boolean")){
+            throw new RuntimeException("La condicion del if requiere boolean, y se encontro => " + type + " <=");
+        }
         this.visit(ctx.block(0));
         if (ctx.block(1) != null) {
             this.visit(ctx.block(1));
@@ -796,6 +805,8 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
 
             if (ctx.actualParams() != null) {
                 this.visit(ctx.actualParams());
+            }else if(funcion.parametros.size() != 0){
+                throw new RuntimeException("La funcion tiene: " + funcion.parametros.size() + " parametros, pero recibió: 0 argumentos.");
             }
             return funcion.type;
 
