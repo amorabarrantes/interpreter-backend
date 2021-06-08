@@ -1,23 +1,18 @@
 package Interpreter;
 
 import com.example.interpreterbackend.claseTablas;
-import contextAnalysis.nodoClase;
-import contextAnalysis.nodoFuncion;
-import contextAnalysis.nodoVariable;
 import generated.myParser;
 import generated.myParserBaseVisitor;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.springframework.util.SerializationUtils;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     claseTablas ct = claseTablas.getIsntance();
     public String varErroresInterprete;
     public String printMessage = "";
+
+    public ArrayList<String> listaImpresion = new ArrayList<>();
 
 
     @Override
@@ -89,23 +84,38 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitBlockSTAST(myParser.BlockSTASTContext ctx) {
-        this.visit(ctx.block());
-        return null;
+
+        Object valor = this.visit(ctx.block());
+        return valor;
     }
 
     @Override
     public Object visitBlockAST(myParser.BlockASTContext ctx) {
-        //ct.tablaFunciones.openScope();
+
         ct.tablaNodoValorVariable.openScope();
         ct.tablaNodoValorClase.openScope();
+        ct.tablaNodoValorFuncion.openScope();
 
         for (myParser.StatementContext statement : ctx.statement()) {
-            this.visit(statement);
+            if(ctx.statement().indexOf(statement) == (ctx.statement().size() -1) && statement.getClass().toString().contains("eturn")){
+                myParser.ReturnSTASTContext retornoS = (myParser.ReturnSTASTContext) statement;
+                myParser.ReturnASTContext retorno = (myParser.ReturnASTContext) retornoS.returnStatement();
+                Object valorExpresion = this.visit(retorno);
+
+                return valorExpresion;
+
+
+            }else{
+                this.visit(statement);
+            }
+
         }
 
-        //ct.tablaFunciones.closeScope();
-        ct.tablaNodoValorVariable.closeScope();
+
+        ct.tablaNodoValorFuncion.closeScope();
         ct.tablaNodoValorClase.closeScope();
+        ct.tablaNodoValorVariable.closeScope();
+
         return null;
     }
 
@@ -113,14 +123,14 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     public Object visitFunctionDecAST(myParser.FunctionDecASTContext ctx) {
         String tipoDatoFuncion = (String) this.visit(ctx.type());
 
-        if (ctx.formalParams() != null)
-            this.visit(ctx.formalParams());
+        //if (ctx.formalParams() != null)
+        //    this.visit(ctx.formalParams());
 
         //this.visit(ctx.block());
 
         ct.tablaNodoValorFuncion.enter(new nodoValorFuncion(ctx.IDENTIFIER().getText(), ct.tablaNodoValorFuncion.nivel, tipoDatoFuncion, ctx));
 
-        ct.tablaNodoValorFuncion.imprimirNodoValorFuncion();
+        //ct.tablaNodoValorFuncion.imprimirNodoValorFuncion();
         return null;
     }
 
@@ -139,11 +149,11 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
         String type = (String) this.visit(ctx.type());
 
         String nombreFuncion = ((myParser.FunctionDecASTContext) (ctx.parent.parent)).IDENTIFIER().getText();
-        nodoFuncion nodo = ct.tablaFunciones.retrieveNode(nombreFuncion);
+        nodoValorFuncion nodo = ct.tablaNodoValorFuncion.retrieveNode(nombreFuncion);
 
-        nodo.parametros.add(new nodoVariable(ctx.IDENTIFIER().getSymbol(), ct.tablaVarDeclaration.nivel + 1, ctx, type));
-        ct.tablaVarDeclaration.enter(new nodoVariable(ctx.IDENTIFIER().getSymbol(), ct.tablaVarDeclaration.nivel + 1, ctx, type));
-
+        nodoValorVariable parametroFuncion = new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel + 1, type, null); //Se crea la variable del parametro
+        ct.tablaNodoValorVariable.enter(parametroFuncion); //Se inserta la variable en la tabla de variables del interpreter.
+        nodo.listaParametros.add(parametroFuncion); //Se inserta esta variable en la lista de parametros de la funcion
         return null;
     }
 
@@ -179,7 +189,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitPrintAST(myParser.PrintASTContext ctx) {
-        printMessage += this.visit(ctx.expression()).toString() + "\n";
+        listaImpresion.add(this.visit(ctx.expression()).toString());
         return null;
     }
 
@@ -225,13 +235,14 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitVarDecAST(myParser.VarDecASTContext ctx) {
+
         String type = (String) this.visit(ctx.type());
-
         if (ctx.expression() != null) {
-            Object valorExpression = this.visit(ctx.expression());
 
+            Object valorExpression = this.visit(ctx.expression());
             switch (type) {
                 case "int":
+
                     String auxInt = valorExpression.toString();
                     String[] auxInt2 = auxInt.split("\\.");
                     String auxInt3 = auxInt2[0];
@@ -266,6 +277,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                     ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, new char[Integer.parseInt((String) valorExpression)]));
                     break;
                 default:
+
                     ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, (nodoValorClase) valorExpression));
                     break;
             }
@@ -273,6 +285,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
             ct.tablaNodoValorVariable.enter(new nodoValorVariable(ctx.IDENTIFIER().getText(), ct.tablaNodoValorVariable.nivel, type, null));
         }
         //ct.tablaNodoValorVariable.imprimirNodoValorVariables();
+
         return null;
     }
 
@@ -518,12 +531,13 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
+
         Object tipoFactor = this.visit(ctx.factor(0));
 
         if (ctx.factor().size() != 1) {
             for (int i = 1; i < ctx.factor().size(); i++) {
-                String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
-                String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
+                String tipoMultiplicative = this.visit(ctx.multiplicativeOP(i - 1)).toString();
+                String tipoFactorAuxiliar = this.visit(ctx.factor(i)).toString();
 
                 switch (tipoMultiplicative) {
                     case "mul":
@@ -567,8 +581,8 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitFunctionCallFAST(myParser.FunctionCallFASTContext ctx) {
-        String tipoFuncion = (String) this.visit(ctx.functionCall());
-        return tipoFuncion;
+        Object valor = this.visit(ctx.functionCall());
+        return valor;
     }
 
     @Override
@@ -746,26 +760,83 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitFunctionCallAST(myParser.FunctionCallASTContext ctx) {
-        nodoFuncion funcion = ct.tablaFunciones.retrieveNode(ctx.IDENTIFIER().getText());
-        if (funcion != null) {
-            if (ctx.actualParams() != null) {
-                this.visit(ctx.actualParams());
-            }
-            return funcion.type;
 
-        } else {
-            throw new RuntimeException(ctx.IDENTIFIER().getText() + " => no existe esta funcion");
+        nodoValorFuncion funcion = ct.tablaNodoValorFuncion.retrieveNode(ctx.IDENTIFIER().getText());
+
+        if (ctx.actualParams() != null) {
+
+            this.visit(funcion.declCtx.formalParams()); //Se visitan los parametros de la funcion para guardarlos como variables
+
+            this.visit(ctx.actualParams()); //Se visitan los argumentos para asignarselos a los parametros de la funcion
+
+
         }
+
+        System.out.println("si");
+        Object retorno = this.visit(funcion.declCtx.block()); //Se ejecuta el bloque de la funcion
+        System.out.println("no");
+
+
+        return retorno;
     }
 
     @Override
     public Object visitActualParamsAST(myParser.ActualParamsASTContext ctx) {
-        nodoFuncion funcion = ct.tablaFunciones.retrieveNode(((myParser.FunctionCallASTContext) ctx.parent).IDENTIFIER().getText());
+
+        nodoValorFuncion funcion = ct.tablaNodoValorFuncion.retrieveNode(((myParser.FunctionCallASTContext) ctx.parent).IDENTIFIER().getText());
         for (int i = 0; i < ctx.expression().size(); i++) {
-            String tipoParametroFuncion = funcion.parametros.get(i).type;
-            String tipoExpressionArgumento = (String) this.visit(ctx.expression().get(i));
+            Object valorArgumentoSubI = this.visit(ctx.expression().get(i));
+            nodoValorVariable parametro = funcion.listaParametros.get(i);
+            String type = parametro.type;
+            switch (type) {
+                case "int":
+
+                    String auxInt = valorArgumentoSubI.toString();
+                    if(auxInt.contains(".")){
+                        String[] auxInt2 = auxInt.split("\\.");
+                        String auxInt3 = auxInt2[0];
+                        parametro.valor = Integer.parseInt(auxInt3);
+                    }else{
+                        parametro.valor = Integer.parseInt(valorArgumentoSubI.toString());
+                    }
+                    break;
+                case "real":
+                    parametro.valor = Double.parseDouble(valorArgumentoSubI.toString());
+                    break;
+                case "string":
+                    String subString = ((String) valorArgumentoSubI).replace("\"", "");
+                    parametro.valor = subString;
+                    break;
+                case "boolean":
+                    parametro.valor = Boolean.parseBoolean(valorArgumentoSubI.toString());
+                    break;
+                case "char":
+                    String subChar = ((String) valorArgumentoSubI).replace("'", "");
+                    parametro.valor = subChar.charAt(0);
+                    break;
+                case "int[]":
+                    int[] listaInt = (int[])valorArgumentoSubI;
+                    parametro.valor = listaInt;
+                    break;
+                case "boolean[]":
+                    boolean[] listaBoolean = (boolean[])valorArgumentoSubI;
+                    parametro.valor = listaBoolean;
+                    break;
+                case "string[]":
+                    String[] listaString = (String[])valorArgumentoSubI;
+                    parametro.valor = listaString;
+                    break;
+                case "char[]":
+                    char[] listaChar = (char[])valorArgumentoSubI;
+                    parametro.valor = listaChar;
+                    break;
+                default:
+                    break;
+            }
 
         }
+        //ct.tablaNodoValorFuncion.imprimirNodoValorFuncion();
+
         return null;
     }
 

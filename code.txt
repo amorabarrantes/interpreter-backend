@@ -1,4 +1,9 @@
-int hola(int wa){
-    wa = 5;
-    return wa;
+int factorial(int n) {
+    int valor = 1;
+    if (n != 0) {
+        valor = n * factorial(n-1);
+    }
+    return valor;
 }
+
+print(factorial(5));
