@@ -142,21 +142,13 @@ public class metodos {
                 interpreterVisit iv = new interpreterVisit();
                 iv.visit(tree);
 
+
                 for (Object obj: iv.listaImpresion) {
                     System.out.print(obj.toString() + '\n');
                 }
-/*
-                nodoValorClase hola = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("hola").valor;
-                System.out.println(hola.atributos.get(0).valor);
-
-                nodoValorClase adios = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("adios").valor;
-                System.out.println(adios.atributos.get(0).valor);
-
-                nodoValorClase adios2 = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode("adios2").valor;
-                System.out.println(adios2.atributos.get(0).valor);
-*/
 
 
+                ct.tablaNodoValorVariable.imprimirNodoValorVariables();
 
             } else {
                 System.out.println(ac.varErrores + "     *** AC");

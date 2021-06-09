@@ -414,6 +414,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitExpressionAST(myParser.ExpressionASTContext ctx) {
 
+
         String tipoSimpleExpression = (String) this.visit(ctx.simpleExpression(0));
 
         ArrayList<String> intRelationals = new ArrayList<>() {
