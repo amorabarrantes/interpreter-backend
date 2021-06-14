@@ -512,11 +512,23 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                 String tipoAdditive = this.visit(ctx.additiveOp(i - 1)).toString();
                 Object tipoTerminoAuxiliar = this.visit(ctx.term(i));
 
+                ArrayList array = new ArrayList();
+                for (myParser.TermContext obj: ctx.term()) {
+                    String variable = visit(obj).getClass().toString();
+                    array.add(variable);
+                }
+
                 switch (tipoAdditive) {
                     case "mas":
-                        Double tipoTerminoAux = Double.parseDouble(tipoTermino.toString()) + Double.parseDouble(tipoTerminoAuxiliar.toString());
-                        tipoTermino = tipoTerminoAux;
-                        break;
+                        if (array.contains("class java.lang.String")){
+                            String tipoTerminoAux = tipoTermino.toString() + tipoTerminoAuxiliar.toString();
+                            tipoTermino = tipoTerminoAux;
+                            break;
+                        }else{
+                            Double tipoTerminoAux = Double.parseDouble(tipoTermino.toString()) + Double.parseDouble(tipoTerminoAuxiliar.toString());
+                            tipoTermino = tipoTerminoAux;
+                            break;
+                        }
                     case "minus":
                         Double tipoTerminoAux2 = Double.parseDouble(tipoTermino.toString()) - Double.parseDouble(tipoTerminoAuxiliar.toString());
                         tipoTermino = tipoTerminoAux2;
@@ -577,10 +589,12 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     public Object visitIdFAST(myParser.IdFASTContext ctx) {
         //Asignacion de una variable ya declarada.
         if (ctx.IDENTIFIER().size() == 1) {
-            //ct.tablaNodoValorVariable.imprimirNodoValorVariables();
             Object hola = ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER(0).getText()).valor;
-            //System.out.println(hola);
-            return hola;
+            if(hola!= null){
+                return hola;
+            }else{
+                throw new RuntimeException("La variable => " + ctx.IDENTIFIER(0).getText() + " <= tiene un valor nulo.");
+            }
 
         } else {//Asignacion de una variable de tipo clase.
             nodoValorClase clase = (nodoValorClase) ct.tablaNodoValorVariable.retrieveNode(ctx.IDENTIFIER(0).getText()).valor;
@@ -772,7 +786,6 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     public Object visitFunctionCallAST(myParser.FunctionCallASTContext ctx) {
 
         nodoValorFuncion funcion = ct.tablaNodoValorFuncion.retrieveNode(ctx.IDENTIFIER().getText());
-
         if (ctx.actualParams() != null) {
 
             this.visit(funcion.declCtx.formalParams()); //Se visitan los parametros de la funcion para guardarlos como variables
@@ -781,12 +794,9 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
 
         }
-
         //System.out.println(ct.tablaNodoValorVariable.nivel);
         Object retorno = this.visit(funcion.declCtx.block()); //Se ejecuta el bloque de la funcion
         //System.out.println(ct.tablaNodoValorVariable.nivel);
-
-
         return retorno;
     }
 

@@ -16,5 +16,4 @@ public class ResponseBody {
     public String getMensajeImpresion(){
         return  mensajeImpresion;
     }
-
 }

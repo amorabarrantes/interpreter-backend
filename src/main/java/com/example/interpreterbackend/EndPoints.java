@@ -1,4 +1,5 @@
 package com.example.interpreterbackend;
+import Interpreter.interpreterVisit;
 import contextAnalysis.identificationTable;
 import org.apache.catalina.connector.Connector;
 import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
@@ -41,16 +42,29 @@ public class EndPoints {
         estaLimpio = true;
 
         String mensaje = metodos.compilarCodigoCompleto(
-                "char chr(int i){return 'q';} " +
+                "char chr(int i){return 'i';} " +
                 "\nint ord(string ch){return 0;}\n" +
-                "int len(int[] arr){return 0;} \n" +
+                "int len(int[] arr){return arr.length;} \n" +
                 stringCodeValue);
+
+
+
 
         String tablaVariables = ct.tablaVarDeclaration.retornarStringTablaVariable();
         String tablaFunciones = ct.tablaFunciones.retornarStringTablaFuncion();
         String tablaClases = ct.tablaClassDeclaration.retornarStringTablaClase();
 
         String tablasGlobal = tablaVariables + "\n" + tablaClases + "\n" + tablaFunciones;
+
+        //Impresiones mensaje
+        interpreterVisit iv = new interpreterVisit();
+
+        if(mensaje.contains("Ⓖ")){
+            String[] sublist = mensaje.split("Ⓖ");
+            tablasGlobal += "\n\n\n IMPRESIONES: \n" + sublist[0];
+            mensaje = "Ejecucion finalizada!!";
+        }
+
 
         ResponseBody response = new ResponseBody(mensaje, tablasGlobal);
 
@@ -63,9 +77,9 @@ public class EndPoints {
     @GetMapping("/compileSnippet")
     public ResponseBody compilarCodigoConsola(@RequestParam(value = "stringCodeValue") String stringCodeValue){
         if(estaLimpio){
-            metodos.compilarCodigoConsola("char chr(int i){return 'q';} " +
+            metodos.compilarCodigoConsola("char chr(int i){return 'i';} " +
                     "\nint ord(string ch){return 0;}\n" +
-                    "int len(int[] arr){return 0;} \n");
+                    "int len(int[] arr){return arr.length;} \n");
             estaLimpio = false;
         }
 
@@ -77,6 +91,14 @@ public class EndPoints {
 
         String tablasGlobal = tablaVariables + "\n" + tablaClases + "\n" + tablaFunciones;
 
+        interpreterVisit iv = new interpreterVisit();
+
+
+        if(mensaje.contains("Ⓖ")){
+            String[] sublist = mensaje.split("Ⓖ");
+            tablasGlobal += "\n\n\n IMPRESIONES: \n" + sublist[0];
+            mensaje = "Ejecucion finalizada!!";
+        }
         ResponseBody response = new ResponseBody(mensaje, tablasGlobal);
         return response;
     }

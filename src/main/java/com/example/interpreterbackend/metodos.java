@@ -55,10 +55,13 @@ public class metodos {
                 String erroresInterpreter = iv.varErroresInterprete;
                 if(erroresInterpreter.equals("")){
                     String mensajeImpresion = "";
+
                     for (String subMensaje: iv.listaImpresion) {
                         mensajeImpresion += subMensaje + "\n";
                     }
-                    mensajeImpresion += "Ejecución finalizada.\n";
+
+                    mensajeImpresion += " Ⓖ Ejecución finalizada.\n";
+
                     return mensajeImpresion;
                 }else{
                     iv.varErroresInterprete = "";
@@ -106,11 +109,15 @@ public class metodos {
                 iv.visit(tree);
                 String erroresInterpreter = iv.varErroresInterprete;
                 if(erroresInterpreter.equals("")){
+
                     String mensajeImpresion = "";
+
                     for (String subMensaje: iv.listaImpresion) {
                         mensajeImpresion += subMensaje + "\n";
                     }
-                    mensajeImpresion += "Ejecución finalizada.\n";
+
+                    mensajeImpresion += " Ⓖ Ejecución finalizada.\n";
+
                     return mensajeImpresion;
                 }else{
                     iv.varErroresInterprete = "";
