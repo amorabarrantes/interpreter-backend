@@ -49,7 +49,23 @@ public class metodos {
             String errores = ac.varErrores;
 
             if (errores.equals("")) {
-                return ("Compilado correctamente");
+                interpreterVisit iv = new interpreterVisit();
+                iv.varErroresInterprete = "";
+                iv.visit(tree);
+                String erroresInterpreter = iv.varErroresInterprete;
+                if(erroresInterpreter.equals("")){
+                    String mensajeImpresion = "";
+                    for (String subMensaje: iv.listaImpresion) {
+                        mensajeImpresion += subMensaje + "\n";
+                    }
+                    mensajeImpresion += "Ejecución finalizada.\n";
+                    return mensajeImpresion;
+                }else{
+                    iv.varErroresInterprete = "";
+                    iv.listaImpresion.clear();
+                    return erroresInterpreter;
+                }
+
             } else {
                 ac.varErrores = "";
                 return errores;
@@ -78,14 +94,29 @@ public class metodos {
         parser.addErrorListener(ErrorCatcher.INSTANCE);
         tree = parser.program();
 
-        if (ErrorCatcher.INSTANCE.stringErrores == "") {
+        if (ErrorCatcher.INSTANCE.stringErrores.equals("")) {
             AnalisisContextual ac = new AnalisisContextual();
             ac.varErrores = "";
             ac.visit(tree);
             String errores = ac.varErrores;
 
             if (errores.equals("")) {
-                return ("Compilado correctamente");
+                interpreterVisit iv = new interpreterVisit();
+                iv.varErroresInterprete = "";
+                iv.visit(tree);
+                String erroresInterpreter = iv.varErroresInterprete;
+                if(erroresInterpreter.equals("")){
+                    String mensajeImpresion = "";
+                    for (String subMensaje: iv.listaImpresion) {
+                        mensajeImpresion += subMensaje + "\n";
+                    }
+                    mensajeImpresion += "Ejecución finalizada.\n";
+                    return mensajeImpresion;
+                }else{
+                    iv.varErroresInterprete = "";
+                    iv.listaImpresion.clear();
+                    return erroresInterpreter;
+                }
             } else {
                 ac.varErrores = "";
                 return errores;
@@ -120,17 +151,6 @@ public class metodos {
         parser.addErrorListener(ErrorCatcher.INSTANCE);
         tree = parser.program();
 
-
-        /*
-        HashMap<String, java.io.Serializable> hash_map = new HashMap<String, java.io.Serializable>();
-        // Mapping string values to int keys
-        hash_map.put("x", true);
-        hash_map.put("hola",1);
-        hash_map.put("hola2","hola");
-
-        // Displaying the HashMap
-        System.out.println("Initial Mappings are: " + hash_map);
-        */
 
         if (ErrorCatcher.INSTANCE.stringErrores.equals("")) {
             System.out.println("CODIGO SIN ERRORES SINTAXIS");

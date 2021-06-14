@@ -11,8 +11,6 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     claseTablas ct = claseTablas.getIsntance();
     public String varErroresInterprete;
-    public String printMessage = "";
-
     public ArrayList<String> listaImpresion = new ArrayList<>();
 
 
