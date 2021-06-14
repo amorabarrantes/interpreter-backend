@@ -3,6 +3,7 @@ package com.example.interpreterbackend;
 import Interpreter.interpreterVisit;
 import Interpreter.nodoValorClase;
 import Interpreter.nodoValorVariable;
+import Interpreter.valuesTable;
 import contextAnalysis.AnalisisContextual;
 import contextAnalysis.identificationTable;
 import generated.*;
@@ -26,6 +27,9 @@ public class metodos {
         ct.tablaClassDeclaration = new identificationTable<>(new LinkedList<>(), 0);
         ct.tablaVarDeclaration = new identificationTable<>(new LinkedList<>(), 0);
 
+        ct.tablaNodoValorFuncion = new valuesTable<>(new LinkedList<>(), 0);
+        ct.tablaNodoValorVariable = new valuesTable<>(new LinkedList<>(), 0);
+        ct.tablaNodoValorClase = new valuesTable<>(new LinkedList<>(), 0);
 
         myScanner inst = null;
         myParser parser = null;

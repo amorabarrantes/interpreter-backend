@@ -1,4 +1,27 @@
-string x = "hola";
-int q = 51111;
-string hola = x + q;
-print(hola);
+class hola{
+  int x;
+};
+
+int funcion(int[] x, int qa){
+  int contador = 0;
+  while(contador < x.length){
+    if(x[contador] == qa){
+      print "iguales";
+    }
+    contador = contador + 1;
+  }
+  return contador;
+}
+
+hola j = new hola();
+j.x = +3;
+
+int[] lista = new int[5];
+lista[1] = 3*5;
+
+int q = 3*5;
+print q;
+
+
+int variable = funcion(lista, j.x);
+print variable;

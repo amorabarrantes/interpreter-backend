@@ -542,7 +542,9 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
     @Override
     public Object visitTermAST(myParser.TermASTContext ctx) {
         String tipoFactor = (String) this.visit(ctx.factor(0));
-        if (ctx.factor().size() != 1) {
+        if(ctx.factor().size() == 1){
+            return tipoFactor;
+        } else {
             for (int i = 1; i < ctx.factor().size(); i++) {
                 String tipoMultiplicative = (String) this.visit(ctx.multiplicativeOP(i - 1));
                 String tipoFactorAuxiliar = (String) this.visit(ctx.factor(i));
@@ -574,7 +576,7 @@ public class AnalisisContextual extends myParserBaseVisitor<Object> {
             return "real";
         } else if (arreglo.contains("char")) {
             return "char";
-        } else {
+        } else  {
             return "int";
         }
     }

@@ -1,5 +1,6 @@
 package com.example.interpreterbackend;
 import Interpreter.interpreterVisit;
+import Interpreter.valuesTable;
 import contextAnalysis.identificationTable;
 import org.apache.catalina.connector.Connector;
 import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
@@ -43,7 +44,7 @@ public class EndPoints {
 
         String mensaje = metodos.compilarCodigoCompleto(
                 "char chr(int i){return 'i';} " +
-                "\nint ord(string ch){return 0;}\n" +
+                "\nint ord(char ch){return 0;}\n" +
                 "int len(int[] arr){return arr.length;} \n" +
                 stringCodeValue);
 
@@ -71,6 +72,11 @@ public class EndPoints {
         ct.tablaFunciones = new identificationTable<>(new LinkedList<>(), 0);
         ct.tablaClassDeclaration = new identificationTable<>(new LinkedList<>(), 0);
         ct.tablaVarDeclaration = new identificationTable<>(new LinkedList<>(), 0);
+
+        ct.tablaNodoValorFuncion = new valuesTable<>(new LinkedList<>(), 0);
+        ct.tablaNodoValorVariable = new valuesTable<>(new LinkedList<>(), 0);
+        ct.tablaNodoValorClase = new valuesTable<>(new LinkedList<>(), 0);
+
         return response;
     }
 
@@ -78,7 +84,7 @@ public class EndPoints {
     public ResponseBody compilarCodigoConsola(@RequestParam(value = "stringCodeValue") String stringCodeValue){
         if(estaLimpio){
             metodos.compilarCodigoConsola("char chr(int i){return 'i';} " +
-                    "\nint ord(string ch){return 0;}\n" +
+                    "\nint ord(char ch){return 0;}\n" +
                     "int len(int[] arr){return arr.length;} \n");
             estaLimpio = false;
         }
@@ -100,6 +106,8 @@ public class EndPoints {
             mensaje = "Ejecucion finalizada!!";
         }
         ResponseBody response = new ResponseBody(mensaje, tablasGlobal);
+
+
         return response;
     }
 

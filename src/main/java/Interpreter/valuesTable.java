@@ -111,7 +111,13 @@ public class valuesTable<generico extends nodoValor> {
         System.out.println("----- INICIO TABLA FUNCIONES------");
         for (generico obj : ll) {
             System.out.println("\nNombre: " + obj.identifier + " - Nivel: " + obj.nivel + " - Tipo: " + ((nodoValorFuncion) obj).type);
+
+            System.out.println(((nodoValorFuncion) obj).listaParametros.size());
+            for ( nodoValorVariable obj2: ((nodoValorFuncion) obj).listaParametros) {
+                System.out.println("Valor parametro:" + obj2.valor);
+            }
         }
+
         System.out.println("\n----- FIN TABLA FUNCIONES------");
     }
 

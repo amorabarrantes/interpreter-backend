@@ -166,6 +166,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
     @Override
     public Object visitWhileAST(myParser.WhileASTContext ctx) {
         Boolean condicionBoolean = (Boolean) this.visit(ctx.expression());
+
         while (condicionBoolean) {
             this.visit(ctx.block());
             condicionBoolean = (Boolean) this.visit(ctx.expression());
@@ -415,7 +416,10 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                 if (indice >= var.length || indice < 0) {
                     throw new RuntimeException("El indice => " + indice + " <= esta fuera de las dimensiones del array => " + varArray.identifier + " <=");
                 } else {
-                    ((int[]) varArray.valor)[indice] = Integer.parseInt(valorAsignacion);
+                    String[] auxInt2 = valorAsignacion.split("\\.");
+                    String auxInt3 = auxInt2[0];
+
+                    ((int[]) varArray.valor)[indice] = Integer.parseInt(auxInt3);
                     break;
                 }
             case "boolean[]":
@@ -471,6 +475,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
                         break;
                     case "smaller":
                         boolean tipoSimpleExpressionAux3 = Double.parseDouble(tipoSimpleExpression.toString()) < Double.parseDouble(tipoSimpleExpressionAuxiliar.toString());
+
                         tipoSimpleExpression = tipoSimpleExpressionAux3;
                         break;
                     case "greather":
@@ -514,7 +519,7 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
                 ArrayList array = new ArrayList();
                 for (myParser.TermContext obj: ctx.term()) {
-                    String variable = visit(obj).getClass().toString();
+                    Object variable = visit(obj).getClass();
                     array.add(variable);
                 }
 
@@ -784,20 +789,59 @@ public class interpreterVisit extends myParserBaseVisitor<Object> {
 
     @Override
     public Object visitFunctionCallAST(myParser.FunctionCallASTContext ctx) {
-
         nodoValorFuncion funcion = ct.tablaNodoValorFuncion.retrieveNode(ctx.IDENTIFIER().getText());
-        if (ctx.actualParams() != null) {
 
-            this.visit(funcion.declCtx.formalParams()); //Se visitan los parametros de la funcion para guardarlos como variables
+        if(funcion.identifier.equals("chr")){
+            if (ctx.actualParams() != null) {
+                this.visit(funcion.declCtx.formalParams()); //Se visitan los parametros de la funcion para guardarlos como variables
+                this.visit(ctx.actualParams()); //Se visitan los argumentos para asignarselos a los parametros de la funcion
+            }
 
-            this.visit(ctx.actualParams()); //Se visitan los argumentos para asignarselos a los parametros de la funcion
+            this.visit(funcion.declCtx.block()); //Se ejecuta el bloque de la funcion
 
+            int parametro = Integer.parseInt(funcion.listaParametros.get(0).valor.toString());
+            char x = (char)parametro;
+            funcion.listaParametros.clear();
 
+            return x;
+
+        }else if(funcion.identifier.equals("ord")){
+            if (ctx.actualParams() != null) {
+                this.visit(funcion.declCtx.formalParams()); //Se visitan los parametros de la funcion para guardarlos como variables
+                this.visit(ctx.actualParams()); //Se visitan los argumentos para asignarselos a los parametros de la funcion
+            }
+
+            this.visit(funcion.declCtx.block()); //Se ejecuta el bloque de la funcion
+
+            char parametro = funcion.listaParametros.get(0).valor.toString().charAt(0);
+            int x = (int)parametro;
+            funcion.listaParametros.clear();
+
+            return x;
         }
-        //System.out.println(ct.tablaNodoValorVariable.nivel);
-        Object retorno = this.visit(funcion.declCtx.block()); //Se ejecuta el bloque de la funcion
-        //System.out.println(ct.tablaNodoValorVariable.nivel);
-        return retorno;
+
+        else{
+            //System.out.println("1");
+
+            if (ctx.actualParams() != null) {
+
+                //System.out.println("2");
+                this.visit(funcion.declCtx.formalParams()); //Se visitan los parametros de la funcion para guardarlos como variables
+
+                //System.out.println("3");
+
+                this.visit(ctx.actualParams()); //Se visitan los argumentos para asignarselos a los parametros de la funcion
+            }
+
+            //System.out.println("4");
+
+            Object retorno = this.visit(funcion.declCtx.block()); //Se ejecuta el bloque de la funcion
+
+            //System.out.println("5");
+            funcion.listaParametros.clear();
+
+            return retorno;
+        }
     }
 
     @Override
