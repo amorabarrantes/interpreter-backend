@@ -2,14 +2,15 @@ package com.example.interpreterbackend;
 import Interpreter.interpreterVisit;
 import Interpreter.valuesTable;
 import contextAnalysis.identificationTable;
+import org.springframework.web.bind.annotation.*;
+import java.util.LinkedList;
+
 import org.apache.catalina.connector.Connector;
 import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedList;
 
 @RestController
 
@@ -31,6 +32,7 @@ public class EndPoints {
         });
         return factory;
     }
+
 
     @GetMapping("/")
     public String homePage(){
@@ -106,8 +108,7 @@ public class EndPoints {
             mensaje = "Ejecucion finalizada!!";
         }
         ResponseBody response = new ResponseBody(mensaje, tablasGlobal);
-
-
+        
         return response;
     }
 
