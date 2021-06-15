@@ -16,7 +16,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @RestController
 
-@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 
 
 public class EndPoints {
@@ -35,24 +35,11 @@ public class EndPoints {
         return factory;
     }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("*")
-                        .allowedHeaders("*");
-            }
-        };
-    }
 
     @GetMapping("/")
     public String homePage(){
         return "Home page";
     }
-
 
     @GetMapping("/compileAllCode")
     public ResponseBody compilarCodigoCompleto(@RequestParam(value = "stringCodeValue") String stringCodeValue){
